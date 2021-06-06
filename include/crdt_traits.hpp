@@ -1,9 +1,11 @@
+#ifndef CRDT_TRAITS_H
+#define CRDT_TRAITS_H
+
 #include <concepts>
 #include <functional>
 #include <type_traits>
 #include <optional>
 #include <system_error>
-
 
 template <typename F, typename T>
 concept hashable = std::regular_invocable<F, T> && std::convertible_to<std::invoke_result_t<F, T>, size_t>;
@@ -23,3 +25,11 @@ concept cmrdt = requires(T a, Op op) {
     { a.apply(op) } -> std::convertible_to<void>;
 };
 
+template<actor_type A> struct version_vector;
+
+template <typename T, typename V, typename A>
+concept reset_removable = std::is_same_v<V, version_vector<A>> && requires(T t, V v) {
+    { t.reset_remove(v) } -> std::convertible_to<void>;
+};
+
+#endif // CRDT_TRAITS_H

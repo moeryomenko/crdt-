@@ -1,3 +1,6 @@
+#ifndef DOT_H
+#define DOT_H
+
 #include <compare>
 #include <cstdint>
 
@@ -20,3 +23,5 @@ struct dot {
         return (*this);
     }
 };
+
+#endif // DOT_H
