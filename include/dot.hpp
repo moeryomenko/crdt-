@@ -1,3 +1,4 @@
+#include <compare>
 #include <concepts>
 #include <cstdint>
 #include <functional>
@@ -26,24 +27,8 @@ struct dot {
         actor = dot.actor;
         counter = dot.counter + 1;
     }
-    bool operator==(const dot<A>& d) const
-    {
-        return actor == d.actor && counter == d.counter;
-    }
 
-    bool operator<(const dot<A>& d) const
-    {
-        if (actor == d.actor) {
-            return counter < d.counter;
-        } else {
-            return actor < d.actor;
-        }
-    }
-
-    bool operator>(const dot<A>& d) const
-    {
-        return d < (*this);
-    }
+    auto operator<=>(const dot<A>& b) const = default;
 
     dot& operator++()
     {
@@ -51,17 +36,3 @@ struct dot {
         return (*this);
     }
 };
-
-template<actor_type A>
-bool operator==(const dot<A>& d1, const dot<A>& d2) {
-    return d1.actor == d2.actor && d1.counter == d2.counter;
-}
-
-template<actor_type A>
-bool operator<(const dot<A>& a, const dot<A>& b) {
-    if (a.actor == b.actor) {
-        return a.couter < b.counter;
-    } else {
-        return a.actor < b.actor;
-    }
-}
