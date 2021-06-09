@@ -4,12 +4,17 @@
 #include <compare>
 #include <cstdint>
 #include <map>
+#include <utility>
 
 template<actor_type A>
 struct version_vector {
     std::map<A, std::uint32_t> dots;
 
-    version_vector(version_vector<A>&) = default;
+    version_vector(const version_vector<A>&) = default;
+    version_vector(version_vector<A>&&) = default;
+
+    version_vector(std::map<A, uint32_t>&& v) noexcept : dots(v) {}
+
     auto operator<=>(const version_vector<A>& other) const = default;
 
     void reset_remove(const version_vector<A>& other) {
@@ -21,13 +26,13 @@ struct version_vector {
         }
     }
 
-    auto get(const A& a) -> dot<A> {
+    auto get(const A& a) -> dot<A>&& {
         auto [actor, counter] = *(dots.find(a));
-        return dot(actor, counter);
+        return std::move(dot(actor, counter));
     }
 
-    auto incremant(const A& a) -> dot<A> {
-        return get(a)++;
+    auto increment(const A& a) -> dot<A>&& {
+        return std::move(++get(a));
     }
 
     auto validate_op(const dot<A>& Op) -> std::optional<std::error_condition> {
