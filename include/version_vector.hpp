@@ -1,3 +1,6 @@
+#ifndef VERSION_VECTOR_H
+#define VERSION_VECTOR_H
+
 #include "crdt_traits.hpp"
 #include "dot.hpp"
 
@@ -60,3 +63,5 @@ struct version_vector {
         }
     }
 };
+
+#endif  // VERSION_VECTOR_H

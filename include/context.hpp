@@ -1,3 +1,6 @@
+#ifndef CONTEXT_H
+#define CONTEXT_H
+
 #include "crdt_traits.hpp"
 #include "dot.hpp"
 #include "version_vector.hpp"
@@ -26,7 +29,7 @@ struct read_context {
         auto ret = add_vector;
         auto d = ret.incremant(a);
         ret.apply(d);
-        return add_context{ ret, d };
+        return add_context{ ret, std::move(d) };
     }
 
     auto derive_remove_context() -> remove_context<A> {
@@ -40,3 +43,4 @@ struct read_context {
     }
 };
 
+#endif // CONTEXT_H
