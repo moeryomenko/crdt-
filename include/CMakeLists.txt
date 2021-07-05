@@ -1,6 +1,6 @@
-add_library(dCRDT INTERFACE)
-target_include_directories(dCRDT INTERFACE .)
-target_compile_features(dCRDT INTERFACE cxx_std_20)
+add_library(crdt++ INTERFACE)
+target_include_directories(crdt++ INTERFACE .)
+target_compile_features(crdt++ INTERFACE cxx_std_20)
 
 add_executable(dot_test dot_test.cpp)
 target_include_directories(dot_test INTERFACE .)
