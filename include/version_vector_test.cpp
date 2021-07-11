@@ -10,8 +10,7 @@ auto main() -> int
                 version_vector<int> v{std::move(dots)};
                 for(auto [actor, counter] : v.dots) {
                     auto incremanted_dot = dot{actor, counter+1};
-                    auto ret = v.increment(actor);
-                    RC_ASSERT(ret == incremanted_dot);
+                    RC_ASSERT(v.increment(actor) == incremanted_dot);
                 }
             });
     return 0;

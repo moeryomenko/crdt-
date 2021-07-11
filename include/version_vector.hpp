@@ -29,16 +29,16 @@ struct version_vector {
         }
     }
 
-    auto get(const A& a) -> dot<A>&& {
+    auto get(const A& a) const noexcept -> dot<A> {
         auto [actor, counter] = *(dots.find(a));
-        return std::move(dot(actor, counter));
+        return dot(actor, counter);
     }
 
-    auto increment(const A& a) -> dot<A>&& {
-        return std::move(++get(a));
+    auto increment(const A& a) const noexcept -> dot<A> {
+        return ++get(a);
     }
 
-    auto validate_op(const dot<A>& Op) -> std::optional<std::error_condition> {
+    auto validate_op(const dot<A>& Op) noexcept -> std::optional<std::error_condition> {
         auto next_counter = dots.find(Op.actor)->second + 1;
         if (Op.counter > next_counter) {
             return std::make_error_condition(std::errc::invalid_argument);
@@ -47,17 +47,17 @@ struct version_vector {
         return std::nullopt;
     }
 
-    void apply(const dot<A>& Op) {
+    void apply(const dot<A>& Op) noexcept {
         if(auto counter = dots.find(&Op.actor)->second;
                 counter < Op.counter) {
             dots.insert(Op.actor, Op.counter);
         }
     }
 
-    auto validate_merge(const version_vector<A>& T)
+    auto validate_merge(const version_vector<A>& T) noexcept
         -> std::optional<std::error_condition> { return std::nullopt; }
 
-    void merge(const version_vector<A>& other) {
+    void merge(const version_vector<A>& other) noexcept {
         for(dot<A> d : other.dots) {
             dots.apply(d);
         }
