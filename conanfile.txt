@@ -1,0 +1,6 @@
+[requires]
+rapidcheck/20210107
+robin-hood-hashing/3.11.1
+
+[generators]
+cmake

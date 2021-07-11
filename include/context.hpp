@@ -29,7 +29,7 @@ struct read_context {
         auto ret = add_vector;
         auto d = ret.incremant(a);
         ret.apply(d);
-        return add_context{ ret, std::move(d) };
+        return add_context{ std::move(ret), std::move(d) };
     }
 
     auto derive_remove_context() -> remove_context<A> {

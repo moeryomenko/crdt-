@@ -7,43 +7,22 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # need for clangd.
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# install module that speeds up the build process.
-set(COTIRE_DOWNLOAD_VERSION 1.8.1)
-set(COTIRE_DOWNLOAD_LOCATION
-    "${CMAKE_BINARY_DIR}/cmake/COTIRE_${COTIRE_DOWNLOAD_VERSION}.cmake")
+set(CMAKE_CXX_STANDARD 20)
 
-if(NOT (EXISTS ${COTIRE_DOWNLOAD_LOCATION}))
-  message(STATUS "Downloading contire.cmake")
-  file(
-    DOWNLOAD
-    https://github.com/sakra/cotire/releases/download/cotire-${COTIRE_DOWNLOAD_VERSION}/cotire.cmake
-    ${COTIRE_DOWNLOAD_LOCATION})
+if (NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+  message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+  file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.16.1/conan.cmake"
+    "${CMAKE_BINARY_DIR}/conan.cmake")
 endif()
 
-include(${COTIRE_DOWNLOAD_LOCATION})
+include(${CMAKE_BINARY_DIR}/conan.cmake)
 
-include(FetchContent)
+conan_cmake_run(CONANFILE conanfile.txt
+  BASIC_SETUP CMAKE_TARGETS
+  BUILD missing)
 
-FetchContent_Declare(
-  rapidcheck
-  GIT_REPOSITORY https://github.com/emil-e/rapidcheck
-  GIT_TAG master)
-
-FetchContent_MakeAvailable(rapidcheck)
-
-# install coverage module.
-set(COVERAGE_DOWNLOAD_LOCATION "${CMAKE_BINARY_DIR}/cmake/CodeCoverage.cmake")
-
-if(NOT (EXISTS ${COVERAGE_DOWNLOAD_LOCATION}))
-  message(STATUS "Downloading CodeCoverage.cmake")
-  file(
-    DOWNLOAD
-    https://raw.githubusercontent.com/bilke/cmake-modules/master/CodeCoverage.cmake
-    ${COVERAGE_DOWNLOAD_LOCATION})
-endif()
-
-include(${COVERAGE_DOWNLOAD_LOCATION})
-append_coverage_compiler_flags()
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
 
 include(CTest)
 enable_testing()

@@ -16,12 +16,12 @@ struct Arbitrary<dot<A>> {
 
 auto main() -> int
 {
-    rc::check("inc increments only the counter",
+    assert(rc::check("inc increments only the counter",
         [](dot<int> d) {
             RC_ASSERT(dot(d.actor, d.counter + 1) == ++d);
-        });
+        }));
 
-    rc::check("dots ordered by actor first",
+    assert(rc::check("dots ordered by actor first",
         [](dot<int> a, dot<int> b) {
             auto ord_property = a.actor < b.actor ? a < b:
                                 a.actor > b.actor ? a > b:
@@ -30,6 +30,7 @@ auto main() -> int
                                                       a.counter == b.counter ? a == b : false) :
                                 false;
             RC_ASSERT(ord_property);
-        });
+        }));
+
     return 0;
 }

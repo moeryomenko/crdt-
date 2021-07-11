@@ -6,17 +6,18 @@
 
 #include <compare>
 #include <cstdint>
-#include <map>
+#include <numeric>
+#include <robin_hood.h>
 #include <utility>
 
 template<actor_type A>
 struct version_vector {
-    std::map<A, std::uint32_t> dots;
+    robin_hood::unordered_flat_map<A, std::uint32_t> dots;
 
     version_vector(const version_vector<A>&) = default;
     version_vector(version_vector<A>&&) = default;
 
-    version_vector(std::map<A, uint32_t>&& v) noexcept : dots(v) {}
+    version_vector(robin_hood::unordered_map<A, uint32_t>&& v) noexcept : dots(v) {}
 
     auto operator<=>(const version_vector<A>& other) const = default;
 
