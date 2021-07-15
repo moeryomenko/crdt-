@@ -28,3 +28,4 @@ include(CTest)
 enable_testing()
 
 add_subdirectory(include)
+add_subdirectory(tests)

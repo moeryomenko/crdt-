@@ -11,7 +11,7 @@ template <typename F, typename T>
 concept hashable = std::regular_invocable<F, T> && std::convertible_to<std::invoke_result_t<F, T>, size_t>;
 
 template <typename T, typename F = std::hash<T>>
-concept actor_type = std::equality_comparable<T> && std::copyable<T> && hashable<F, T>;
+concept actor_type = std::equality_comparable<T> && std::copyable<T> && std::is_default_constructible_v<T> && hashable<F, T>;
 
 template <typename T>
 concept cvrdt = requires(T a, T b) {

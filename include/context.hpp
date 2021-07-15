@@ -19,7 +19,7 @@ struct remove_context {
     version_vector<A> vector;
 };
 
-template <typename T, actor_type A>
+template <typename T, actor_type A> requires std::is_default_constructible_v<T>
 struct read_context {
     version_vector<A> add_vector;
     version_vector<A> remove_vector;
