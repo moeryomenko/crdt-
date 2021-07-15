@@ -14,12 +14,13 @@ template<actor_type A>
 struct version_vector {
     robin_hood::unordered_flat_map<A, std::uint32_t> dots;
 
+    version_vector() = default;
     version_vector(const version_vector<A>&) = default;
     version_vector(version_vector<A>&&) = default;
 
     version_vector(robin_hood::unordered_map<A, uint32_t>&& v) noexcept : dots(v) {}
 
-    auto operator<=>(const version_vector<A>& other) const = default;
+    auto operator<=>(const version_vector<A>&) const noexcept = default;
 
     void reset_remove(const version_vector<A>& other) {
         for (auto [actor, counter] : other.dots) {
@@ -30,13 +31,20 @@ struct version_vector {
         }
     }
 
-    auto get(const A& a) const noexcept -> dot<A> {
-        auto [actor, counter] = *(dots.find(a));
-        return dot(actor, counter);
+    auto get(const A& a) const noexcept -> std::uint32_t {
+        auto it = dots.find(a);
+        if (it == dots.end()) return 0;
+        return it->second;
     }
 
-    auto increment(const A& a) const noexcept -> dot<A> {
-        return ++get(a);
+    auto get_dot(const A& a) const noexcept -> dot<A> {
+        auto it = dots.find(a);
+        if (it == dots.end()) return dot(a, 0);
+        return dot(it->first, it->second);
+    }
+
+    auto inc(const A& a) const noexcept -> dot<A> {
+        return ++get_dot(a);
     }
 
     auto validate_op(const dot<A>& Op) noexcept -> std::optional<std::error_condition> {
@@ -49,9 +57,9 @@ struct version_vector {
     }
 
     void apply(const dot<A>& Op) noexcept {
-        if(auto counter = dots.find(&Op.actor)->second;
+        if(auto counter = get(Op.actor);
                 counter < Op.counter) {
-            dots.insert(Op.actor, Op.counter);
+            dots[Op.actor] = Op.counter;
         }
     }
 
