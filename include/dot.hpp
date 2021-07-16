@@ -4,7 +4,7 @@
 #include <compare>
 #include <cstdint>
 
-#include "crdt_traits.hpp"
+#include <crdt_traits.hpp>
 
 template <actor_type A>
 struct dot {

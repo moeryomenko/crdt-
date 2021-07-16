@@ -1,12 +1,12 @@
 #ifndef CONTEXT_H
 #define CONTEXT_H
 
-#include "crdt_traits.hpp"
-#include "dot.hpp"
-#include "version_vector.hpp"
-
 #include <unordered_map>
 #include <utility>
+
+#include <crdt_traits.hpp>
+#include <dot.hpp>
+#include <version_vector.hpp>
 
 template <actor_type A>
 struct add_context {

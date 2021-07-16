@@ -9,3 +9,7 @@ add_test(NAME VectorTestSuite COMMAND version_vector_test)
 add_executable(gcounter_test gcounter_test.cpp)
 target_link_libraries(gcounter_test crdtxx)
 add_test(NAME GCounterTestSuite COMMAND gcounter_test)
+
+add_executable(pncounter_test pncounter_test.cpp)
+target_link_libraries(pncounter_test crdtxx rapidcheck)
+add_test(NAME PNCounterTestSuite COMMAND pncounter_test)

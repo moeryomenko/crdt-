@@ -1,5 +1,6 @@
-#include "dot.hpp"
 #include <boost/ut.hpp>
+
+#include <dot.hpp>
 #include <gcounter.hpp>
 
 auto main() -> int {

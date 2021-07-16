@@ -1,14 +1,14 @@
 #ifndef VERSION_VECTOR_H
 #define VERSION_VECTOR_H
 
-#include "crdt_traits.hpp"
-#include "dot.hpp"
-
 #include <compare>
 #include <cstdint>
 #include <numeric>
 #include <robin_hood.h>
 #include <utility>
+
+#include <crdt_traits.hpp>
+#include <dot.hpp>
 
 template<actor_type A>
 struct version_vector {

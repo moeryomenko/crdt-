@@ -1,10 +1,13 @@
+#ifndef GCOUNTER_H
+#define GCOUNTER_H
+
 #include <numeric>
 #include <optional>
 #include <system_error>
 
-#include "crdt_traits.hpp"
-#include "dot.hpp"
-#include "version_vector.hpp"
+#include <crdt_traits.hpp>
+#include <dot.hpp>
+#include <version_vector.hpp>
 
 template <actor_type A> struct gcounter {
     version_vector<A> inner;
@@ -39,3 +42,5 @@ template <actor_type A> struct gcounter {
                 [] (std::uint32_t sum, auto n) { return sum + n.second; });
     }
 };
+
+#endif // GCOUNTER_H
