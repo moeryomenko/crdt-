@@ -30,9 +30,7 @@ template <actor_type A> struct gcounter {
 
     void reset_remove(const version_vector<A>& v) { inner.reset_remove(v); }
 
-    auto inc(const A& a) const noexcept -> dot<A> { return inner.inc(a); }
-
-    auto inc(const A& a, std::uint32_t steps) const noexcept -> dot<A> {
+    auto inc(const A& a, std::uint32_t steps = 1) const noexcept -> dot<A> {
         steps += inner.get(a);
         return dot(a, steps);
     }
