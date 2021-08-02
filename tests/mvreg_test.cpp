@@ -1,6 +1,21 @@
 #include <boost/ut.hpp>
+#include <rapidcheck.h>
+
+#include <utility>
 
 #include <mvreg.hpp>
+#include <version_vector.hpp>
+
+using map = std::unordered_map<int, std::uint64_t>;
+using reg = std::pair<map, int>;
+
+mvreg<int, std::uint64_t> build_from_reg(reg&& r) {
+    auto&& [m, val] = r;
+    using val_type = mvreg<int, std::uint64_t>::value;
+    std::vector<val_type> result;
+    result.push_back(val_type(version_vector<int>{robin_hood::unordered_map<int, std::uint64_t>(m.begin(), m.end())}, val));
+    return mvreg<int, std::uint64_t>{ result };
+}
 
 auto main() -> int {
     using namespace boost::ut;
@@ -24,4 +39,46 @@ auto main() -> int {
         r1_snapshot.merge(r2);
         expect(r1_snapshot.read().value == std::vector<std::string>{"bob", "alice"});
     };
+
+    assert(rc::check("associative",
+        [] (reg r1, reg r2, reg r3) {
+            auto reg1 = build_from_reg(std::move(r1));
+            auto reg2 = build_from_reg(std::move(r2));
+            auto reg3 = build_from_reg(std::move(r3));
+
+            auto reg1_snapshot = reg1;
+
+            reg1.merge(reg2);
+            reg1.merge(reg3);
+
+            reg2.merge(reg3);
+            reg1_snapshot.merge(reg2);
+
+            RC_ASSERT(reg1 == reg1_snapshot);
+        }));
+
+    assert(rc::check("commutative",
+        [] (reg r1, reg r2) {
+            auto reg1 = build_from_reg(std::move(r1));
+            auto reg2 = build_from_reg(std::move(r2));
+
+            auto reg1_snapshot = reg1;
+
+            reg1.merge(reg2);
+
+            reg2.merge(reg1_snapshot);
+
+            RC_ASSERT(reg1 == reg2);
+        }));
+
+    assert(rc::check("idempotent",
+        [] (reg r) {
+            auto [dots, val] = r;
+            auto reg = build_from_reg(std::move(r));
+            auto reg_snapshot = build_from_reg(std::move(r));
+
+            reg.merge(reg_snapshot);
+
+            RC_ASSERT(reg == reg_snapshot);
+        }));
 }

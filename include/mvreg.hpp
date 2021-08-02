@@ -20,13 +20,15 @@ struct mvreg {
         value(const version_vector<A>& vc, T v): vclock(vc), val(v) {}
         value& operator=(const value&) = default;
         value& operator=(value&&) = default;
+
+        auto operator<=>(const value&) const noexcept = default;
     };
     std::vector<value> vals;
 
-    auto operator==(const mvreg<A, T>& other) -> bool {
+    auto operator==(const mvreg<A, T>& other) const -> bool {
         const auto cmp_values = [] (const std::vector<value>& v1, const std::vector<value>& v2) -> bool {
             for (const auto& d: v1) {
-                if (std::ranges::none_of(v2, [d = &d] (const value& v) { return v == d; })) return false;
+                if (std::ranges::none_of(v2, [=] (const value& v) { return v == d; })) return false;
             }
             return true;
         };
