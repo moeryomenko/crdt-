@@ -7,11 +7,14 @@
 #include <optional>
 #include <system_error>
 
+template <typename T>
+concept value_type = std::default_initializable<T> && std::equality_comparable<T>;
+
 template <typename F, typename T>
 concept hashable = std::regular_invocable<F, T> && std::convertible_to<std::invoke_result_t<F, T>, size_t>;
 
 template <typename T, typename F = std::hash<T>>
-concept actor_type = std::equality_comparable<T> && std::copyable<T> && std::default_initializable<T> && hashable<F, T>;
+concept actor_type = value_type<T> && std::copyable<T> && hashable<F, T>;
 
 template <typename T>
 concept cvrdt = requires(T a, T b) {

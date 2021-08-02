@@ -1,6 +1,7 @@
 #ifndef VERSION_VECTOR_H
 #define VERSION_VECTOR_H
 
+#include <algorithm>
 #include <compare>
 #include <cstdint>
 #include <numeric>
@@ -12,15 +13,35 @@
 
 template<actor_type A>
 struct version_vector {
-    robin_hood::unordered_flat_map<A, std::uint32_t> dots;
+    robin_hood::unordered_flat_map<A, std::uint64_t> dots;
 
     version_vector() = default;
     version_vector(const version_vector<A>&) = default;
     version_vector(version_vector<A>&&) = default;
+    version_vector(robin_hood::unordered_map<A, uint64_t>&& v) noexcept : dots(v) {}
 
-    version_vector(robin_hood::unordered_map<A, uint32_t>&& v) noexcept : dots(v) {}
+    version_vector<A>& operator=(const version_vector<A>&) = default;
+    version_vector<A>& operator=(version_vector<A>&&) = default;
 
     auto operator<=>(const version_vector<A>&) const noexcept = default;
+
+    bool operator>(const version_vector<A>& other) const noexcept {
+        return std::ranges::all_of(other.dots, [ds = &dots] (const auto& d) {
+            const auto [actor, counter] = d;
+            auto r = ds->find(actor);
+            if (r != ds->end() && r->second >= counter) return true;
+            return false;
+        });
+    }
+
+    bool operator<(const version_vector<A>& other) const noexcept {
+        return std::ranges::all_of(dots, [ds = &other.dots] (const auto& d) {
+            const auto [actor, counter] = d;
+            auto r = ds->find(actor);
+            if (r != ds->end() && r->second >= counter) return true;
+            return false;
+        });
+    }
 
     void reset_remove(const version_vector<A>& other) {
         for (auto [actor, counter] : other.dots) {
@@ -31,7 +52,11 @@ struct version_vector {
         }
     }
 
-    auto get(const A& a) const noexcept -> std::uint32_t {
+    bool empty() const {
+        return dots.empty();
+    }
+
+    auto get(const A& a) const noexcept -> std::uint64_t {
         auto it = dots.find(a);
         if (it == dots.end()) return 0;
         return it->second;
@@ -67,9 +92,7 @@ struct version_vector {
         -> std::optional<std::error_condition> { return std::nullopt; }
 
     void merge(const version_vector<A>& other) noexcept {
-        for(dot<A> d : other.dots) {
-            dots.apply(d);
-        }
+        for(const auto& [actor, counter] : other.dots) apply(dot{ actor, counter });
     }
 };
 

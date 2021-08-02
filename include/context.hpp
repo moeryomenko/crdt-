@@ -25,15 +25,21 @@ struct read_context {
     version_vector<A> remove_vector;
     T value;
 
+    read_context() = default;
+    read_context(const read_context<T, A>&) = default;
+    read_context(read_context<T,A>&&) = default;
+    read_context(const version_vector<A>& add, const version_vector<A>& rm, const T& val)
+        : add_vector(add), remove_vector(rm), value(val) {}
+
     auto derive_add_context(A a) -> add_context<A> {
         auto ret = add_vector;
-        auto d = ret.incremant(a);
+        auto d = ret.inc(a);
         ret.apply(d);
-        return add_context{ std::move(ret), std::move(d) };
+        return add_context<A>{ std::move(ret), std::move(d) };
     }
 
     auto derive_remove_context() -> remove_context<A> {
-        return remove_context{ remove_vector };
+        return remove_context<A>{ remove_vector };
     }
 
     auto split() {

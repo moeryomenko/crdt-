@@ -17,3 +17,7 @@ add_test(NAME PNCounterTestSuite COMMAND pncounter_test)
 add_executable(lwwreg_test lwwreg_test.cpp)
 target_link_libraries(lwwreg_test crdtxx rapidcheck)
 add_test(NAME LWWRegTestSuite COMMAND lwwreg_test)
+
+add_executable(mvreg_test mvreg_test.cpp)
+target_link_libraries(mvreg_test crdtxx)
+add_test(NAME MVRegTestSuite COMMAND mvreg_test)

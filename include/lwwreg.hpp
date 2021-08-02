@@ -7,9 +7,6 @@
 #include <crdt_traits.hpp>
 
 template <typename T>
-concept value_type = std::default_initializable<T> && std::equality_comparable<T>;
-
-template <typename T>
 concept marker_type = std::totally_ordered<T>;
 
 template <value_type V, marker_type M>
