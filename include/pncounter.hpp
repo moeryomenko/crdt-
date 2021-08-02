@@ -29,26 +29,39 @@ template <actor_type A> struct pncounter {
         op() = default;
         op(const op&) = default;
         op(op&&) = default;
-        op(dot<A>&& d, Dir&& dir) : Op(std::move(d)), dir(std::move(dir)) {}
+        op(dot<A>&& d, Dir&& dir)
+            : Op(std::move(d))
+            , dir(std::move(dir))
+        {
+        }
     };
 
-    auto validate_op(op Op) noexcept -> std::optional<std::error_condition> {
+    auto validate_op(op Op) noexcept -> std::optional<std::error_condition>
+    {
         return get_direction(Op.dir).validate_op(Op.Op);
     }
 
-    void apply(const op& Op) noexcept {
-        get_direction(Op.dir).apply(Op.Op);
-    }
+    void apply(const op& Op) noexcept { get_direction(Op.dir).apply(Op.Op); }
 
-    auto validate_merge(const pncounter<A>& other) noexcept -> std::optional<std::error_condition> {
+    auto validate_merge(const pncounter<A>& other) noexcept -> std::optional<std::error_condition>
+    {
         auto op = p.validate_merge(other.p);
-        if (op == std::nullopt) return n.validate_merge(other.n);
+        if (op == std::nullopt)
+            return n.validate_merge(other.n);
         return op;
     }
 
-    void merge(const pncounter<A>& other) noexcept { p.merge(other.p); n.merge(other.n); }
+    void merge(const pncounter<A>& other) noexcept
+    {
+        p.merge(other.p);
+        n.merge(other.n);
+    }
 
-    void reset_remove(const version_vector<A>& v) { p.reset_remove(v); n.reset_remove(v); }
+    void reset_remove(const version_vector<A>& v)
+    {
+        p.reset_remove(v);
+        n.reset_remove(v);
+    }
 
     auto inc(const A& a, std::uint32_t steps = 1) const noexcept -> op { return op(p.inc(a, steps), Dir::pos); }
 
@@ -57,9 +70,7 @@ template <actor_type A> struct pncounter {
     auto read() -> std::uint32_t { return p.read() - n.read(); }
 
 private:
-    gcounter<A>& get_direction(Dir dir) noexcept {
-        return dir == Dir::pos ? p : n;
-    }
+    gcounter<A>& get_direction(Dir dir) noexcept { return dir == Dir::pos ? p : n; }
 };
 
 #endif // PNCOUNTER_H

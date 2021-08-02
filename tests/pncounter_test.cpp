@@ -3,7 +3,8 @@
 #include <dot.hpp>
 #include <pncounter.hpp>
 
-auto main() -> int {
+auto main() -> int
+{
     using namespace boost::ut;
 
     "basic by one"_test = [] {

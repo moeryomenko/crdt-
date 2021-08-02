@@ -5,39 +5,26 @@
 
 #include <crdt_traits.hpp>
 
-template<value_type T>
-struct gset {
+template <value_type T> struct gset {
     robin_hood::unordered_flat_set<T> value;
 
     gset() = default;
     gset(const gset<T>&) = default;
     gset(gset<T>&&) = default;
 
-    auto validate_merge(const gset<T>&) noexcept
-        -> std::optional<std::error_condition> { return std::nullopt; }
+    auto validate_merge(const gset<T>&) noexcept -> std::optional<std::error_condition> { return std::nullopt; }
 
-    void merge(const gset<T>& other) noexcept {
-        value.merge(other.value);
-    }
+    void merge(const gset<T>& other) noexcept { value.merge(other.value); }
 
-    auto validate_op(const T& val) noexcept
-        -> std::optional<std::error_condition> { return std::nullopt; }
+    auto validate_op(const T& val) noexcept -> std::optional<std::error_condition> { return std::nullopt; }
 
-    void apply(const T& val) noexcept {
-        insert(val);
-    }
+    void apply(const T& val) noexcept { insert(val); }
 
-    void insert(const T& val) noexcept {
-        value.insert(val);
-    }
+    void insert(const T& val) noexcept { value.insert(val); }
 
-    bool contains(const T& val) noexcept {
-        return value.contains(val);
-    }
+    bool contains(const T& val) noexcept { return value.contains(val); }
 
-    auto read() -> robin_hood::unordered_flat_set<T> {
-        return value;
-    }
+    auto read() -> robin_hood::unordered_flat_set<T> { return value; }
 };
 
 #endif // GSET_H

@@ -6,13 +6,16 @@
 
 #include <crdt_traits.hpp>
 
-template <actor_type A>
-struct dot {
+template <actor_type A> struct dot {
     A actor;
     std::uint64_t counter;
 
     dot() = default;
-    dot(A a, std::uint64_t counter): actor(a), counter(counter) {}
+    dot(A a, std::uint64_t counter)
+        : actor(a)
+        , counter(counter)
+    {
+    }
     dot(dot&&) = default;
     dot(dot& dot) = delete;
     auto operator<=>(const dot<A>& b) const = default;
@@ -20,9 +23,6 @@ struct dot {
     auto clone() -> dot<A> { return ++(*this); };
 };
 
-template <actor_type A>
-auto operator++(const dot<A>& a) noexcept -> dot<A> {
-    return dot<A>(a.actor, (a.counter + 1));
-}
+template <actor_type A> auto operator++(const dot<A>& a) noexcept -> dot<A> { return dot<A>(a.actor, (a.counter + 1)); }
 
 #endif // DOT_H
