@@ -13,7 +13,8 @@
 
 template<actor_type A>
 struct version_vector {
-    robin_hood::unordered_flat_map<A, std::uint64_t> dots;
+    using dots_map = robin_hood::unordered_flat_map<A, std::uint64_t>;
+    dots_map dots;
 
     version_vector() = default;
     version_vector(const version_vector<A>&) = default;
@@ -23,25 +24,21 @@ struct version_vector {
     version_vector<A>& operator=(const version_vector<A>&) = default;
     version_vector<A>& operator=(version_vector<A>&&) = default;
 
-    auto operator<=>(const version_vector<A>&) const noexcept = default;
-
-    bool operator>(const version_vector<A>& other) const noexcept {
-        return std::ranges::all_of(other.dots, [ds = &dots] (const auto& d) {
-            const auto [actor, counter] = d;
-            auto r = ds->find(actor);
-            if (r != ds->end() && r->second >= counter) return true;
-            return false;
-        });
+    auto operator<=>(const version_vector<A>& other) const noexcept {
+        auto cmp_dots = [] (const dots_map& a, const dots_map& b) -> bool {
+            return std::ranges::all_of(b, [&a] (const auto& d) {
+                const auto [actor, counter] = d;
+                const auto r = a.find(actor);
+                if (r != a.end() && r->second >= counter) return true;
+                return false;
+            });
+        };
+        if (cmp_dots(dots, other.dots)) return std::partial_ordering::greater;
+        if (cmp_dots(other.dots, dots)) return std::partial_ordering::less;
+        return std::partial_ordering::unordered;
     }
 
-    bool operator<(const version_vector<A>& other) const noexcept {
-        return std::ranges::all_of(dots, [ds = &other.dots] (const auto& d) {
-            const auto [actor, counter] = d;
-            auto r = ds->find(actor);
-            if (r != ds->end() && r->second >= counter) return true;
-            return false;
-        });
-    }
+    bool operator==(const version_vector<A>&) const noexcept = default;
 
     void reset_remove(const version_vector<A>& other) {
         for (auto [actor, counter] : other.dots) {
