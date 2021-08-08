@@ -6,6 +6,7 @@
 auto main() -> int
 {
     using namespace boost::ut;
+    using namespace crdt;
 
     "basic by one"_test = [] {
         pncounter<std::string> a;

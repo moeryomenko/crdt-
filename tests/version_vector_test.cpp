@@ -1,8 +1,11 @@
-#include "dot.hpp"
-#include "version_vector.hpp"
+#include <unordered_map>
 
 #include <rapidcheck.h>
-#include <unordered_map>
+
+#include <dot.hpp>
+#include <version_vector.hpp>
+
+using namespace crdt;
 
 using map = std::unordered_map<int, std::uint64_t>;
 using robin_map = robin_hood::unordered_flat_map<int, std::uint64_t>;

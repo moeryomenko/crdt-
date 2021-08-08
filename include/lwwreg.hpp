@@ -6,6 +6,8 @@
 
 #include <crdt_traits.hpp>
 
+namespace crdt {
+
 template <typename T>
 concept marker_type = std::totally_ordered<T>;
 
@@ -56,5 +58,7 @@ template <value_type V, marker_type M> struct lwwreg {
 
     void merge(const lwwreg<V, M>& other) noexcept { update(other.value, other.marker); }
 };
+
+} // namespace crdt.
 
 #endif // LWWREG_H

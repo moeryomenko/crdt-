@@ -8,6 +8,8 @@
 #include <crdt_traits.hpp>
 #include <version_vector.hpp>
 
+namespace crdt {
+
 template <actor_type A, value_type T> struct mvreg {
     struct value {
         version_vector<A> vclock;
@@ -97,5 +99,7 @@ template <actor_type A, value_type T> struct mvreg {
         return resutl;
     }
 };
+
+} // namespace crdt.
 
 #endif // MV_REG_H

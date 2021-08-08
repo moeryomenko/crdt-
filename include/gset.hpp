@@ -5,6 +5,8 @@
 
 #include <crdt_traits.hpp>
 
+namespace crdt {
+
 template <value_type T> struct gset {
     robin_hood::unordered_flat_set<T> value;
 
@@ -26,5 +28,7 @@ template <value_type T> struct gset {
 
     auto read() -> robin_hood::unordered_flat_set<T> { return value; }
 };
+
+} // namespace crdt.
 
 #endif // GSET_H

@@ -7,6 +7,8 @@
 #include <optional>
 #include <system_error>
 
+namespace crdt {
+
 template <typename T>
 concept value_type = std::default_initializable<T> && std::equality_comparable<T>;
 
@@ -34,5 +36,7 @@ template <typename T, typename V, typename A>
 concept reset_removable = std::is_same_v<V, version_vector<A>> && requires(T t, V v) {
     { t.reset_remove(v) } -> std::convertible_to<void>;
 };
+
+} // namespace crdt.
 
 #endif // CRDT_TRAITS_H

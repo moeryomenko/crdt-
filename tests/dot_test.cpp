@@ -1,6 +1,8 @@
+#include <rapidcheck.h>
+
 #include "dot.hpp"
 
-#include <rapidcheck.h>
+using namespace crdt;
 
 namespace rc {
 template <actor_type A> struct Arbitrary<dot<A>> {

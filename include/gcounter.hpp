@@ -9,6 +9,8 @@
 #include <dot.hpp>
 #include <version_vector.hpp>
 
+namespace crdt {
+
 template <actor_type A> struct gcounter {
     version_vector<A> inner;
 
@@ -47,5 +49,7 @@ template <actor_type A> struct gcounter {
             inner.dots.begin(), inner.dots.end(), 0, [](std::uint32_t sum, auto n) { return sum + n.second; });
     }
 };
+
+} // namespace crdt.
 
 #endif // GCOUNTER_H

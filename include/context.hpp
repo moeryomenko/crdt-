@@ -8,6 +8,8 @@
 #include <dot.hpp>
 #include <version_vector.hpp>
 
+namespace crdt {
+
 template <actor_type A> struct add_context {
     version_vector<A> vector;
     dot<A> dot;
@@ -46,5 +48,7 @@ struct read_context {
 
     auto split() { return std::pair { value, read_context { add_vector, remove_vector } }; }
 };
+
+} // namespace crdt.
 
 #endif // CONTEXT_H

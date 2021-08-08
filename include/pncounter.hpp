@@ -7,6 +7,8 @@
 #include <dot.hpp>
 #include <gcounter.hpp>
 
+namespace crdt {
+
 /// The Direction of an Op.
 enum class Dir {
     pos, /// signals that the op increments the counter.
@@ -72,5 +74,7 @@ template <actor_type A> struct pncounter {
 private:
     gcounter<A>& get_direction(Dir dir) noexcept { return dir == Dir::pos ? p : n; }
 };
+
+} // namespace crdt.
 
 #endif // PNCOUNTER_H

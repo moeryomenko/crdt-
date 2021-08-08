@@ -11,6 +11,8 @@
 #include <crdt_traits.hpp>
 #include <dot.hpp>
 
+namespace crdt {
+
 template <actor_type A> struct version_vector {
     using dots_map = robin_hood::unordered_flat_map<A, std::uint64_t>;
     dots_map dots;
@@ -103,5 +105,7 @@ template <actor_type A> struct version_vector {
             apply(dot { actor, counter });
     }
 };
+
+} // namespace crdt.
 
 #endif // VERSION_VECTOR_H

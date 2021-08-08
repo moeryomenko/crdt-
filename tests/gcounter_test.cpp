@@ -6,6 +6,7 @@
 auto main() -> int
 {
     using namespace boost::ut;
+    using namespace crdt;
 
     "basic by one"_test = [] {
         gcounter<std::string> A;

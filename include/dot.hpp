@@ -6,6 +6,8 @@
 
 #include <crdt_traits.hpp>
 
+namespace crdt {
+
 template <actor_type A> struct dot {
     A actor;
     std::uint64_t counter;
@@ -24,5 +26,7 @@ template <actor_type A> struct dot {
 };
 
 template <actor_type A> auto operator++(const dot<A>& a) noexcept -> dot<A> { return dot<A>(a.actor, (a.counter + 1)); }
+
+} // namespace crdt.
 
 #endif // DOT_H

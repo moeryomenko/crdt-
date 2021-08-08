@@ -1,12 +1,14 @@
-#include <boost/ut.hpp>
-#include <rapidcheck.h>
-
 #include <cstdint>
 #include <string>
 #include <system_error>
 #include <utility>
 
+#include <boost/ut.hpp>
+#include <rapidcheck.h>
+
 #include <lwwreg.hpp>
+
+using namespace crdt;
 
 auto build_from_pair(std::pair<std::uint8_t, std::uint16_t>&& prim)
     -> lwwreg<std::uint8_t, std::pair<uint16_t, uint8_t>>
