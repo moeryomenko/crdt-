@@ -12,7 +12,7 @@ namespace crdt {
 
 template <actor_type A> struct add_context {
     version_vector<A> vector;
-    dot<A> dot;
+    crdt::dot<A> dot;
 };
 
 template <actor_type A> struct remove_context {
