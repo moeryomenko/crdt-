@@ -33,8 +33,7 @@ template <actor_type A> struct version_vector {
         auto cmp_dots = [](const dots_map& a, const dots_map& b) -> bool {
             return std::ranges::all_of(b, [&a](const auto& d) {
                 const auto [actor, counter] = d;
-                const auto r = a.find(actor);
-                if (r != a.end() && r->second >= counter)
+                if (const auto& r = a.find(actor); r != a.end() && r->second >= counter)
                     return true;
                 return false;
             });
@@ -69,10 +68,9 @@ template <actor_type A> struct version_vector {
 
     auto get_dot(const A& a) const noexcept -> dot<A>
     {
-        auto it = dots.find(a);
-        if (it == dots.end())
-            return dot(a, 0);
-        return dot(it->first, it->second);
+        if (auto it = dots.find(a); it != dots.end())
+            return dot(it->first, it->second);
+        return dot(a, 0);
     }
 
     auto inc(const A& a) const noexcept -> dot<A> { return ++get_dot(a); }
