@@ -44,9 +44,10 @@ template <actor_type A, value_type T> struct mvreg {
 
     void reset_remove(const version_vector<A>& clock)
     {
-        std::ranges::transform(
-            vals, begin(vals), [clock = &clock](const auto& val) { val.vclock.reset_remove(clock); });
-        std::erase_if(vals, [](const auto& val) { return val.vclock.empty(); });
+        std::erase_if(vals, [clock = &clock](const auto& val) {
+            val.vclock.reset_remove(clock);
+            return val.vclock.empty();
+        });
     }
 
     auto validate_merge(const mvreg<A, T>& other) noexcept -> std::optional<std::error_condition>
