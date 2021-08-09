@@ -46,7 +46,7 @@ template <actor_type A> struct gcounter {
     auto read() -> std::uint32_t
     {
         return std::accumulate(
-            inner.dots.begin(), inner.dots.end(), 0, [](std::uint32_t sum, auto n) { return sum + n.second; });
+            inner.dots.begin(), inner.dots.end(), 0, [](std::uint32_t sum, const auto& n) { return sum + n.second; });
     }
 };
 
