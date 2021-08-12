@@ -87,7 +87,7 @@ template <actor_type A> struct version_vector {
 
     void apply(const dot<A>& Op) noexcept
     {
-        if (auto counter = get(Op.actor); counter < Op.counter) {
+        if (auto counter = get(Op.actor); counter <= Op.counter) {
             dots[Op.actor] = Op.counter;
         }
     }
