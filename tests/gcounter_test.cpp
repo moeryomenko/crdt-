@@ -1,7 +1,12 @@
+#include <string>
+
 #include <boost/ut.hpp>
+#include <rapidcheck.h>
 
 #include <dot.hpp>
 #include <gcounter.hpp>
+
+#include "version_vector_utility.hpp"
 
 auto main() -> int
 {
@@ -39,4 +44,42 @@ auto main() -> int
 
         expect(A.read() == (B.read() + steps));
     };
+
+    assert(rc::check("associative", [] (map<int> dots1, map<int> dots2, map<int> dots3) {
+        auto counter1 = gcounter(build_vector(std::move(dots1)));
+        auto counter2 = gcounter(build_vector(std::move(dots2)));
+        auto counter3 = gcounter(build_vector(std::move(dots3)));
+
+        auto v1_snapshot = counter1;
+
+        counter1.merge(counter2);
+        counter1.merge(counter3);
+
+        counter2.merge(counter3);
+        v1_snapshot.merge(counter2);
+
+        RC_ASSERT(counter1 == v1_snapshot);
+    }));
+
+    assert(rc::check("commutative", [](map<int> dots1, map<int> dots2) {
+        auto counter1 = gcounter(build_vector(std::move(dots1)));
+        auto counter2 = gcounter(build_vector(std::move(dots2)));
+
+        auto v1_snapshot(counter1);
+
+        counter1.merge(counter2);
+
+        counter2.merge(v1_snapshot);
+
+        RC_ASSERT(counter1 == counter2);
+    }));
+
+    assert(rc::check("idempotent", [](map<int> dots) {
+        auto counter = gcounter(build_vector(std::move(dots)));
+        auto counter_snapshot = gcounter(build_vector(std::move(dots)));
+
+        counter.merge(counter_snapshot);
+
+        RC_ASSERT(counter == counter_snapshot);
+    }));
 }

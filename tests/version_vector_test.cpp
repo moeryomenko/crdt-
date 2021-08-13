@@ -1,4 +1,5 @@
 #include <ostream>
+#include <string>
 #include <unordered_map>
 
 #include <rapidcheck.h>
@@ -6,28 +7,13 @@
 #include <dot.hpp>
 #include <version_vector.hpp>
 
+#include "version_vector_utility.hpp"
+
 using namespace crdt;
-
-using map = std::unordered_map<int, std::uint64_t>;
-using robin_map = robin_hood::unordered_flat_map<int, std::uint64_t>;
-
-auto build_vector(map&& counter) {
-    return version_vector<int>(robin_map(counter.begin(), counter.end()));
-}
-
-namespace crdt {
-void showValue(const version_vector<int>& v, std::ostream &os) {
-    os << "[ ";
-    for (const auto& [key, value]: v.dots) {
-        os << "{ " << key << ": " << value << "}, ";
-    }
-    os << "]";
-}
-}
 
 auto main() -> int
 {
-    assert(rc::check("increment method return the dot incremented by one", [](map dots) {
+    assert(rc::check("increment method return the dot incremented by one", [](map<int> dots) {
         auto v = build_vector(std::move(dots));
         for (auto [actor, counter] : v.dots) {
             auto incremanted_dot = dot { actor, counter + 1 };
@@ -35,7 +21,7 @@ auto main() -> int
         }
     }));
 
-    assert(rc::check("associative", [] (map dots1, map dots2, map dots3) {
+    assert(rc::check("associative", [](map<std::string> dots1, map<std::string> dots2, map<std::string> dots3) {
         auto v1 = build_vector(std::move(dots1));
         auto v2 = build_vector(std::move(dots2));
         auto v3 = build_vector(std::move(dots3));
@@ -51,7 +37,7 @@ auto main() -> int
         RC_ASSERT(v1 == v1_snapshot);
     }));
 
-    assert(rc::check("commutative", [](map dots1, map dots2) {
+    assert(rc::check("commutative", [](map<std::string> dots1, map<std::string> dots2) {
         auto v1 = build_vector(std::move(dots1));
         auto v2 = build_vector(std::move(dots2));
 
@@ -64,7 +50,7 @@ auto main() -> int
         RC_ASSERT(v1 == v2);
     }));
 
-    assert(rc::check("idempotent", [](map dots) {
+    assert(rc::check("idempotent", [](map<std::string> dots) {
         auto v = build_vector(std::move(dots));
         auto v_snapshot = build_vector(std::move(dots));
 

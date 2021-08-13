@@ -33,7 +33,7 @@ template <actor_type A> struct gcounter {
         return std::nullopt;
     }
 
-    void merge(const version_vector<A>& v) noexcept { inner.merge(v); }
+    void merge(const gcounter<A>& other) noexcept { inner.merge(other.inner); }
 
     void reset_remove(const version_vector<A>& v) { inner.reset_remove(v); }
 
