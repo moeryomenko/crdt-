@@ -14,9 +14,11 @@ template <value_type T> struct gset {
     gset(const gset<T>&) = default;
     gset(gset<T>&&) = default;
 
+    auto operator<=>(const gset<T>&) const noexcept = default;
+
     auto validate_merge(const gset<T>&) noexcept -> std::optional<std::error_condition> { return std::nullopt; }
 
-    void merge(const gset<T>& other) noexcept { value.merge(other.value); }
+    void merge(const gset<T>& other) noexcept { value.insert(other.value.begin(), other.value.end()); }
 
     auto validate_op(const T& val) noexcept -> std::optional<std::error_condition> { return std::nullopt; }
 
