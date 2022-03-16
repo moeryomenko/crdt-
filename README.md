@@ -6,6 +6,15 @@ A family of CRDT's supporting both State and Op based replication.
 
 CRDT's are the solution to highly available mutable state.
 
+## Disclaimer
+
+This project is not ready for production, and is educational in nature to study the topic of CRDT types.
+
+For more info see [crdt.tech](https://crdt.tech/papers.html)
+
+The source code is available at under the terms of both the MIT license and the Apache License.
+See [LICENSE-APACHE](LICENSE-APACHE) and/or [LICENSE-MIT](LICENSE-MIT) for details.
+
 ## Build
 
 For build you need:
