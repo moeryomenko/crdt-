@@ -21,20 +21,20 @@ concept actor_type = value_type<T> && std::copyable<T> && hashable<F, T>;
 template <typename T>
 concept cvrdt = requires(T a, T b) {
     { a.validate_merge(b) } -> std::convertible_to<std::optional<std::error_condition>>;
-    { a.merge(b) } -> std::convertible_to<void>;
+    { a.merge(b) };
 };
 
 template <typename T, typename Op>
 concept cmrdt = requires(T a, Op op) {
-    { a.validate_op(op) } -> std::convertible_to<std::optional<std::error_condition>>;
-    { a.apply(op) } -> std::convertible_to<void>;
+    { a.validate_op(op) };
+    { a.apply(op) };
 };
 
 template<actor_type A> struct version_vector;
 
 template <typename T, typename V, typename A>
 concept reset_removable = std::is_same_v<V, version_vector<A>> && requires(T t, V v) {
-    { t.reset_remove(v) } -> std::convertible_to<void>;
+    { t.reset_remove(v) };
 };
 
 } // namespace crdt.
