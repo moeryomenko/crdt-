@@ -26,7 +26,7 @@ template <value_type V, marker_type M> struct lwwreg {
     if (marker < m) {
       value = val, marker = m;
     }
-	return lwwreg<V, M>{val, m};
+    return lwwreg<V, M>{val, m};
   }
 
   auto validate_update(V &&val, M &&m) -> std::optional<std::error_condition> {

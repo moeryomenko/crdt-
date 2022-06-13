@@ -60,9 +60,9 @@ template <actor_type A> struct pncounter {
   }
 
   auto inc(const A &a, std::uint32_t steps = 1) noexcept -> pncounter<A> {
-	  pncounter<A> res;
-	  res.p = p.inc(a, steps);
-	  return res;
+    pncounter<A> res;
+    res.p = p.inc(a, steps);
+    return res;
   }
 
   auto operator+(const A &a) const noexcept -> op {
@@ -74,13 +74,13 @@ template <actor_type A> struct pncounter {
   }
 
   auto dec(const A &a, std::uint32_t steps = 1) noexcept -> pncounter<A> {
-	  pncounter<A> res;
-	  res.n = n.inc(a, steps);
-	  return res;
+    pncounter<A> res;
+    res.n = n.inc(a, steps);
+    return res;
   }
 
   auto operator-(const A &a) const noexcept -> op {
-	  return ((*this) - std::pair{a, 1});
+    return ((*this) - std::pair{a, 1});
   }
 
   auto operator-(std::pair<A, std::uint32_t> &&a) const noexcept -> op {

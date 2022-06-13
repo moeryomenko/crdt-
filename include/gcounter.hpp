@@ -20,7 +20,7 @@ template <actor_type A> struct gcounter {
   gcounter(const gcounter &) = default;
   gcounter(gcounter &&) = default;
 
-  gcounter& operator=(gcounter&&) = default;
+  gcounter &operator=(gcounter &&) = default;
 
   auto operator<=>(const gcounter<A> &) const noexcept = default;
 
@@ -55,7 +55,7 @@ template <actor_type A> struct gcounter {
   }
 
   auto operator+(std::pair<A, std::uint32_t> &&a) const noexcept -> dot<A> {
-	auto steps = a.second;
+    auto steps = a.second;
     steps += inner.get(a.first);
     return dot(a.first, steps);
   }

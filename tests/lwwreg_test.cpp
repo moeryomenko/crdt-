@@ -97,7 +97,7 @@ auto main() -> int {
   }));
 
   assert(rc::check("change delta", [](int old, int val) {
-	std::string actor = "replica";
+    std::string actor = "replica";
     lwwreg replica1{actor, old};
     auto replica2 = replica1;
 

@@ -91,7 +91,7 @@ auto main() -> int {
     counter.p = gcounter(build_vector(std::move(dots[0])));
     counter.n = gcounter(build_vector(std::move(dots[1])));
     pncounter<int> counter_snapshot;
-	counter_snapshot.p = gcounter(build_vector(std::move(dots[0])));
+    counter_snapshot.p = gcounter(build_vector(std::move(dots[0])));
     counter_snapshot.n = gcounter(build_vector(std::move(dots[1])));
 
     counter.merge(counter_snapshot);
@@ -99,29 +99,31 @@ auto main() -> int {
     RC_ASSERT(counter == counter_snapshot);
   }));
 
-  assert(rc::check("increament change delta", [](std::array<map<int>, 2> dots, int value) {
-    pncounter<int> replica1;
-    replica1.p = gcounter(build_vector(std::move(dots[0])));
-    replica1.n = gcounter(build_vector(std::move(dots[1])));
-	auto replica2 = replica1;
+  assert(rc::check("increament change delta",
+                   [](std::array<map<int>, 2> dots, int value) {
+                     pncounter<int> replica1;
+                     replica1.p = gcounter(build_vector(std::move(dots[0])));
+                     replica1.n = gcounter(build_vector(std::move(dots[1])));
+                     auto replica2 = replica1;
 
-	auto delta = replica1.inc(value);
+                     auto delta = replica1.inc(value);
 
-	replica2.merge(delta);
+                     replica2.merge(delta);
 
-    RC_ASSERT(replica1 == replica2);
-  }));
+                     RC_ASSERT(replica1 == replica2);
+                   }));
 
-  assert(rc::check("decreament change delta", [](std::array<map<int>, 2> dots, int value) {
-    pncounter<int> replica1;
-    replica1.p = gcounter(build_vector(std::move(dots[0])));
-    replica1.n = gcounter(build_vector(std::move(dots[1])));
-	auto replica2 = replica1;
+  assert(rc::check("decreament change delta",
+                   [](std::array<map<int>, 2> dots, int value) {
+                     pncounter<int> replica1;
+                     replica1.p = gcounter(build_vector(std::move(dots[0])));
+                     replica1.n = gcounter(build_vector(std::move(dots[1])));
+                     auto replica2 = replica1;
 
-	auto delta = replica1.dec(value);
+                     auto delta = replica1.dec(value);
 
-	replica2.merge(delta);
+                     replica2.merge(delta);
 
-    RC_ASSERT(replica1 == replica2);
-  }));
+                     RC_ASSERT(replica1 == replica2);
+                   }));
 }

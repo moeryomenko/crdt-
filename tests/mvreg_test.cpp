@@ -106,13 +106,13 @@ auto main() -> int {
   }));
 
   assert(rc::check("change delta", [](reg r, int value) {
-	auto [m, actor] = r;
+    auto [m, actor] = r;
     auto replica1 = build_from_reg(std::move(r));
-	auto replica2 = replica1;
+    auto replica2 = replica1;
 
-	auto delta = replica1.write(actor, value);
+    auto delta = replica1.write(actor, value);
 
-	replica2.merge(delta);
+    replica2.merge(delta);
 
     RC_ASSERT(replica1 == replica2);
   }));

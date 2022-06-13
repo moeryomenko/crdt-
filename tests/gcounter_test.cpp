@@ -85,11 +85,11 @@ auto main() -> int {
 
   assert(rc::check("change delta", [](map<int> dots, int value) {
     auto replica1 = gcounter(build_vector(std::move(dots)));
-	auto replica2 = replica1;
+    auto replica2 = replica1;
 
-	auto delta = replica1.inc(value);
+    auto delta = replica1.inc(value);
 
-	replica2.merge(delta);
+    replica2.merge(delta);
 
     RC_ASSERT(replica1 == replica2);
   }));

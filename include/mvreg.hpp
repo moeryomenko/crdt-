@@ -80,10 +80,10 @@ template <actor_type A, value_type T> struct mvreg {
     return value{ctx.vector, val};
   }
 
-  auto write(const A& actor, const T &val) noexcept -> mvreg<A, T> {
-	  mvreg<A, T> reg;
-	  reg.apply(reg.write(read().derive_add_context(actor), val));
-	  return mvreg<A, T>{};
+  auto write(const A &actor, const T &val) noexcept -> mvreg<A, T> {
+    mvreg<A, T> reg;
+    reg.apply(reg.write(read().derive_add_context(actor), val));
+    return mvreg<A, T>{};
   }
 
   auto read() -> read_context<std::vector<T>, A> {
