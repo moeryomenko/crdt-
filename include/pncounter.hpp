@@ -35,13 +35,14 @@ template <actor_type A> struct pncounter {
     op(dot<A> &&d, Dir &&dir) : Op(std::move(d)), dir(std::move(dir)) {}
   };
 
-  auto validate_op(op Op) noexcept -> std::optional<std::error_condition> {
+  auto validate_op(op Op) const noexcept
+      -> std::optional<std::error_condition> {
     return get_direction(Op.dir).validate_op(Op.Op);
   }
 
   void apply(const op &Op) noexcept { get_direction(Op.dir).apply(Op.Op); }
 
-  auto validate_merge(const pncounter<A> &other) noexcept
+  auto validate_merge(const pncounter<A> &other) const noexcept
       -> std::optional<std::error_condition> {
     auto op = p.validate_merge(other.p);
     if (op == std::nullopt)
@@ -87,7 +88,7 @@ template <actor_type A> struct pncounter {
     return op(n.operator+(std::move(a)), Dir::neg);
   }
 
-  auto read() -> std::uint32_t { return p.read() - n.read(); }
+  auto read() const noexcept -> std::uint32_t { return p.read() - n.read(); }
 
 private:
   gcounter<A> &get_direction(Dir dir) noexcept {
