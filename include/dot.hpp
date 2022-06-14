@@ -18,7 +18,7 @@ template <actor_type A> struct dot {
   dot(dot &dot) = delete;
   auto operator<=>(const dot<A> &b) const = default;
 
-  auto clone() -> dot<A> { return ++(*this); };
+  auto clone() const noexcept -> dot<A> { return ++(*this); };
 };
 
 template <actor_type A> auto operator++(const dot<A> &a) noexcept -> dot<A> {

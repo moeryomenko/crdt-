@@ -31,18 +31,18 @@ struct read_context {
                const T &val)
       : add_vector(add), remove_vector(rm), value(val) {}
 
-  auto derive_add_context(A a) -> add_context<A> {
+  auto derive_add_context(A a) const noexcept -> add_context<A> {
     auto ret = add_vector;
     auto d = ret.inc(a);
     ret.apply(d);
     return add_context<A>{std::move(ret), std::move(d)};
   }
 
-  auto derive_remove_context() -> remove_context<A> {
+  auto derive_remove_context() const noexcept -> remove_context<A> {
     return remove_context<A>{remove_vector};
   }
 
-  auto split() {
+  auto split() const noexcept {
     return std::pair{value, read_context{add_vector, remove_vector}};
   }
 };

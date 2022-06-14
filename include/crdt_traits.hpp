@@ -26,7 +26,7 @@ concept cvrdt = requires(T a, T b) {
 
 template <typename T, typename Op>
 concept cmrdt = requires(T a, Op op) {
-    { a.validate_op(op) };
+    { a.validate_op(op) } -> std::convertible_to<std::optional<std::error_condition>>;
     { a.apply(op) };
 };
 
@@ -38,5 +38,8 @@ concept reset_removable = std::is_same_v<V, version_vector<A>> && requires(T t, 
 };
 
 } // namespace crdt.
+
+template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
+template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
 
 #endif // CRDT_TRAITS_H

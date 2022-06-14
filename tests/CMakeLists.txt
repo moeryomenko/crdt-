@@ -25,3 +25,7 @@ add_test(NAME MVRegTestSuite COMMAND mvreg_test)
 add_executable(gset_test gset_test.cpp)
 target_link_libraries(gset_test crdtxx rapidcheck)
 add_test(NAME GSetTestSuite COMMAND gset_test)
+
+add_executable(orswot_test orswot_test.cpp)
+target_link_libraries(orswot_test crdtxx rapidcheck)
+add_test(NAME ORSWOTTestSuite COMMAND orswot_test)

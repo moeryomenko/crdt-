@@ -29,13 +29,14 @@ template <value_type V, marker_type M> struct lwwreg {
     return lwwreg<V, M>{val, m};
   }
 
-  auto validate_update(V &&val, M &&m) -> std::optional<std::error_condition> {
+  auto validate_update(V &&val, M &&m) const noexcept
+      -> std::optional<std::error_condition> {
     if (marker == m && value != val)
       return std::make_error_condition(std::errc::operation_would_block);
     return std::nullopt;
   }
 
-  auto validate_op(lwwreg<V, M> other) noexcept
+  auto validate_op(lwwreg<V, M> other) const noexcept
       -> std::optional<std::error_condition> {
     return valida_update(other.value, other.marker);
   }
@@ -44,7 +45,7 @@ template <value_type V, marker_type M> struct lwwreg {
     update(other.value, other.marker);
   }
 
-  auto validate_merge(lwwreg<V, M> other) noexcept
+  auto validate_merge(lwwreg<V, M> other) const noexcept
       -> std::optional<std::error_condition> {
     return valida_update(other.value, other.marker);
   }

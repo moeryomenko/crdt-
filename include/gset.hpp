@@ -17,7 +17,7 @@ template <value_type T> struct gset {
 
   auto operator<=>(const gset<T> &) const noexcept = default;
 
-  auto validate_merge(const gset<T> &) noexcept
+  auto validate_merge(const gset<T> &) const noexcept
       -> std::optional<std::error_condition> {
     return std::nullopt;
   }
@@ -26,7 +26,7 @@ template <value_type T> struct gset {
     value.insert(other.value.begin(), other.value.end());
   }
 
-  auto validate_op(const T &val) noexcept
+  auto validate_op(const T &val) const noexcept
       -> std::optional<std::error_condition> {
     return std::nullopt;
   }
@@ -47,9 +47,9 @@ template <value_type T> struct gset {
     return res;
   }
 
-  bool contains(const T &val) noexcept { return value.contains(val); }
+  bool contains(const T &val) const noexcept { return value.contains(val); }
 
-  auto read() -> robin_hood::unordered_flat_set<T> { return value; }
+  auto read() const noexcept -> robin_hood::unordered_flat_set<T> { return value; }
 };
 
 } // namespace crdt.

@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <compare>
 #include <cstdint>
+#include <iterator>
 #include <numeric>
 #include <robin_hood.h>
 #include <utility>
@@ -25,20 +26,25 @@ template <actor_type A> struct version_vector {
 
   version_vector<A> &operator=(const version_vector<A> &) = default;
   version_vector<A> &operator=(version_vector<A> &&) = default;
+  version_vector<A> &operator=(version_vector<A> &) = default;
 
   auto operator<=>(const version_vector<A> &other) const noexcept {
-    auto cmp_dots = [](const dots_map &a, const dots_map &b) -> bool {
-      return std::ranges::all_of(b, [&a](const auto &d) {
-        const auto [actor, counter] = d;
-        if (const auto &r = a.find(actor); r != a.end() && r->second >= counter)
-          return true;
-        return false;
-      });
+    auto all_gt = [](const version_vector<A> &left,
+                     const version_vector<A> &right) -> bool {
+      return std::all_of(
+          right.dots.begin(), right.dots.end(),
+          [&left](const auto &d) { return left.get(d.first) >= d.second; });
     };
-    if (cmp_dots(dots, other.dots))
+
+    if (this->dots.size() == other.dots.size() &&
+        std::equal(this->dots.begin(), this->dots.end(), other.dots.begin())) {
+      return std::partial_ordering::equivalent;
+    } else if (all_gt(*this, other)) {
       return std::partial_ordering::greater;
-    if (cmp_dots(other.dots, dots))
+    } else if (all_gt(other, *this)) {
       return std::partial_ordering::less;
+    }
+
     return std::partial_ordering::unordered;
   }
 
@@ -53,7 +59,7 @@ template <actor_type A> struct version_vector {
     }
   }
 
-  bool empty() const { return dots.empty(); }
+  bool empty() const noexcept { return dots.empty(); }
 
   auto get(const A &a) const noexcept -> std::uint64_t {
     auto it = dots.find(a);
@@ -70,7 +76,7 @@ template <actor_type A> struct version_vector {
 
   auto inc(const A &a) const noexcept -> dot<A> { return ++get_dot(a); }
 
-  auto validate_op(const dot<A> &Op) noexcept
+  auto validate_op(const dot<A> &Op) const noexcept
       -> std::optional<std::error_condition> {
     auto next_counter = dots.find(Op.actor)->second + 1;
     if (Op.counter > next_counter) {
@@ -86,7 +92,7 @@ template <actor_type A> struct version_vector {
     }
   }
 
-  auto validate_merge(const version_vector<A> &T) noexcept
+  auto validate_merge(const version_vector<A> &T) const noexcept
       -> std::optional<std::error_condition> {
     return std::nullopt;
   }
@@ -95,8 +101,41 @@ template <actor_type A> struct version_vector {
     for (const auto &[actor, counter] : other.dots)
       apply(dot{actor, counter});
   }
+
+  auto clone_without(version_vector<A> base_clock) const noexcept
+      -> version_vector<A> {
+    version_vector<A> cloned(*this);
+    cloned.reset_remove(base_clock);
+    return cloned;
+  }
 };
 
+template <actor_type A>
+auto intersection(const version_vector<A> &left,
+                  const version_vector<A> &right) noexcept
+    -> version_vector<A> {
+  robin_hood::unordered_map<A, std::uint64_t> dots;
+  std::set_intersection(left.dots.begin(), left.dots.end(), right.dots.begin(),
+                        right.dots.end(), std::inserter(dots, dots.begin()));
+  return version_vector(std::move(dots));
+}
+
 } // namespace crdt.
+
+namespace robin_hood {
+
+using namespace crdt;
+
+template <actor_type A> struct hash<version_vector<A>> {
+  size_t operator()(const version_vector<A> &k) const {
+    robin_hood::hash<A> elem_hash;
+    return std::accumulate(k.dots.begin(), k.dots.end(), 0,
+                           [&elem_hash](size_t acc, const auto &elem) {
+                             return acc ^ elem_hash(elem.first);
+                           });
+  }
+};
+
+} // namespace robin_hood
 
 #endif // VERSION_VECTOR_H
