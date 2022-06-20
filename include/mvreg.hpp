@@ -2,6 +2,7 @@
 #define MV_REG_H
 
 #include <algorithm>
+#include <compare>
 #include <vector>
 
 #include <context.hpp>
@@ -11,6 +12,8 @@
 namespace crdt {
 
 template <actor_type A, value_type T> struct mvreg {
+  using actor_t = A;
+
   struct value {
     version_vector<A> vclock;
     T val;
@@ -22,8 +25,10 @@ template <actor_type A, value_type T> struct mvreg {
     value &operator=(const value &) = default;
     value &operator=(value &&) = default;
 
-    auto operator<=>(const value &) const noexcept = default;
+    auto operator<=>(const value &other) const noexcept = default;
   };
+
+  using Op = value;
   std::vector<value> vals;
 
   auto operator==(const mvreg<A, T> &other) const noexcept -> bool {
@@ -40,7 +45,7 @@ template <actor_type A, value_type T> struct mvreg {
   }
 
   void reset_remove(const version_vector<A> &clock) noexcept {
-    std::erase_if(vals, [clock = &clock](const auto &val) {
+    std::erase_if(vals, [&clock](auto val) {
       val.vclock.reset_remove(clock);
       return val.vclock.empty();
     });
@@ -65,12 +70,12 @@ template <actor_type A, value_type T> struct mvreg {
     vals.insert(vals.end(), other.vals.begin(), other.vals.end());
   }
 
-  auto validate_op(const value &_) const noexcept
+  auto validate_op(const Op &_) const noexcept
       -> std::optional<std::error_condition> {
     return std::nullopt;
   }
 
-  void apply(const value &op) noexcept {
+  void apply(const Op &op) noexcept {
     if (std::none_of(vals.begin(), vals.end(),
                      [clock = op.vclock](const auto &val) {
                        return val.vclock > clock;
@@ -78,7 +83,7 @@ template <actor_type A, value_type T> struct mvreg {
       vals.push_back(op);
   }
 
-  auto write(add_context<A> &&ctx, T val) const noexcept -> value {
+  auto write(const add_context<A> &ctx, T val) const noexcept -> Op {
     return value{ctx.vector, val};
   }
 

@@ -24,16 +24,17 @@ concept cvrdt = requires(T a, T b) {
     { a.merge(b) };
 };
 
-template <typename T, typename Op>
-concept cmrdt = requires(T a, Op op) {
+template <typename T>
+concept cmrdt = requires(T a, typename T::Op op) {
+    typename T::Op;
     { a.validate_op(op) } -> std::convertible_to<std::optional<std::error_condition>>;
     { a.apply(op) };
 };
 
 template<actor_type A> struct version_vector;
 
-template <typename T, typename V, typename A>
-concept reset_removable = std::is_same_v<V, version_vector<A>> && requires(T t, V v) {
+template <typename T>
+concept crdt = cvrdt<T> && cmrdt<T> && requires(T t, version_vector<typename T::actor_t> v) {
     { t.reset_remove(v) };
 };
 

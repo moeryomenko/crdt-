@@ -5,8 +5,6 @@
 #include <orswot.hpp>
 #include <utility>
 
-#include "version_vector_utility.hpp"
-
 using set = std::unordered_set<std::string>;
 using replicated_set = crdt::orswot<std::string, std::string>;
 void setup_set(std::string &&ctx, replicated_set &crdt_set, set s) {

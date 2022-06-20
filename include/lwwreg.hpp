@@ -12,6 +12,7 @@ template <typename T>
 concept marker_type = std::totally_ordered<T>;
 
 template <value_type V, marker_type M> struct lwwreg {
+  using Op = lwwreg<V, M>;
   V value;
   M marker;
 
