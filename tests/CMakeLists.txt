@@ -1,31 +1,29 @@
-add_executable(dot_test dot_test.cpp)
-target_link_libraries(dot_test crdtxx rapidcheck)
-add_test(NAME DotTestSuite COMMAND dot_test)
+function(crdt_test)
+  cmake_parse_arguments(CRDT_TEST "" "NAME" "" ${ARGN})
 
-add_executable(version_vector_test version_vector_test.cpp)
-target_link_libraries(version_vector_test crdtxx rapidcheck)
-add_test(NAME VectorTestSuite COMMAND version_vector_test)
+  string(TOUPPER ${CRDT_TEST_NAME} SUIT)
+  string(CONCAT SUIT_TEST ${SUIT} "_SUIT")
+  string(CONCAT CRDT_TEST_SRC ${CRDT_TEST_NAME} ".cpp")
 
-add_executable(gcounter_test gcounter_test.cpp)
-target_link_libraries(gcounter_test crdtxx rapidcheck)
-add_test(NAME GCounterTestSuite COMMAND gcounter_test)
+  add_executable(${CRDT_TEST_NAME} "${CRDT_TEST_SRC}")
+  target_link_libraries(${CRDT_TEST_NAME} crdtxx rapidcheck)
+  add_test(NAME ${SUIT_TEST} COMMAND ${CRDT_TEST_NAME})
+endfunction()
 
-add_executable(pncounter_test pncounter_test.cpp)
-target_link_libraries(pncounter_test crdtxx rapidcheck)
-add_test(NAME PNCounterTestSuite COMMAND pncounter_test)
+crdt_test(NAME "dot_test")
 
-add_executable(lwwreg_test lwwreg_test.cpp)
-target_link_libraries(lwwreg_test crdtxx rapidcheck)
-add_test(NAME LWWRegTestSuite COMMAND lwwreg_test)
+crdt_test(NAME "version_vector_test")
 
-add_executable(mvreg_test mvreg_test.cpp)
-target_link_libraries(mvreg_test crdtxx rapidcheck)
-add_test(NAME MVRegTestSuite COMMAND mvreg_test)
+crdt_test(NAME "gcounter_test")
 
-add_executable(gset_test gset_test.cpp)
-target_link_libraries(gset_test crdtxx rapidcheck)
-add_test(NAME GSetTestSuite COMMAND gset_test)
+crdt_test(NAME "pncounter_test")
 
-add_executable(orswot_test orswot_test.cpp)
-target_link_libraries(orswot_test crdtxx rapidcheck)
-add_test(NAME ORSWOTTestSuite COMMAND orswot_test)
+crdt_test(NAME "lwwreg_test")
+
+crdt_test(NAME "mvreg_test")
+
+crdt_test(NAME "gset_test")
+
+crdt_test(NAME "orswot_test")
+
+crdt_test(NAME "ormwot_test")

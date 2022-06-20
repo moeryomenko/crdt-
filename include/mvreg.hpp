@@ -2,6 +2,7 @@
 #define MV_REG_H
 
 #include <algorithm>
+#include <compare>
 #include <vector>
 
 #include <context.hpp>
@@ -11,6 +12,8 @@
 namespace crdt {
 
 template <actor_type A, value_type T> struct mvreg {
+  using actor_t = A;
+
   struct value {
     version_vector<A> vclock;
     T val;
@@ -22,8 +25,10 @@ template <actor_type A, value_type T> struct mvreg {
     value &operator=(const value &) = default;
     value &operator=(value &&) = default;
 
-    auto operator<=>(const value &) const noexcept = default;
+    auto operator<=>(const value &other) const noexcept = default;
   };
+
+  using Op = value;
   std::vector<value> vals;
 
   auto operator==(const mvreg<A, T> &other) const noexcept -> bool {
@@ -40,7 +45,7 @@ template <actor_type A, value_type T> struct mvreg {
   }
 
   void reset_remove(const version_vector<A> &clock) noexcept {
-    std::erase_if(vals, [clock = &clock](const auto &val) {
+    std::erase_if(vals, [&clock](auto val) {
       val.vclock.reset_remove(clock);
       return val.vclock.empty();
     });
@@ -52,25 +57,26 @@ template <actor_type A, value_type T> struct mvreg {
   }
 
   void merge(mvreg<A, T> other) noexcept {
-    auto erase_filter = [](auto &origin, const auto &filter) {
-      std::erase_if(origin, [vals = &filter](const auto &val) {
-        return std::count_if(vals->begin(), vals->end(),
-                             [clock = val.vclock](const auto &val) {
-                               return clock < val.vclock;
-                             }) != 0;
-      });
-    };
-    erase_filter(vals, other.vals);
-    erase_filter(other.vals, vals);
+    std::erase_if(vals, [other](const auto &val) {
+      return std::any_of(
+          other.vals.begin(), other.vals.end(),
+          [clock = val.vclock](const auto &val) { return val.vclock >= clock; });
+    });
+    std::erase_if(other.vals, [vals = vals](const auto &val) {
+      return std::any_of(vals.begin(), vals.end(),
+                         [clock = val.vclock](const auto &val) {
+                           return val.vclock > clock;
+                         });
+    });
     vals.insert(vals.end(), other.vals.begin(), other.vals.end());
   }
 
-  auto validate_op(const value &_) const noexcept
+  auto validate_op(const Op &_) const noexcept
       -> std::optional<std::error_condition> {
     return std::nullopt;
   }
 
-  void apply(const value &op) noexcept {
+  void apply(const Op &op) noexcept {
     if (std::none_of(vals.begin(), vals.end(),
                      [clock = op.vclock](const auto &val) {
                        return val.vclock > clock;
@@ -78,7 +84,7 @@ template <actor_type A, value_type T> struct mvreg {
       vals.push_back(op);
   }
 
-  auto write(add_context<A> &&ctx, T val) const noexcept -> value {
+  auto write(const add_context<A> &ctx, T val) const noexcept -> Op {
     return value{ctx.vector, val};
   }
 

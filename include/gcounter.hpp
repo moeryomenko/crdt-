@@ -13,6 +13,8 @@
 namespace crdt {
 
 template <actor_type A> struct gcounter {
+  using Op = dot<A>;
+
   version_vector<A> inner;
 
   gcounter() = default;
@@ -29,7 +31,7 @@ template <actor_type A> struct gcounter {
     return std::nullopt;
   }
 
-  void apply(const dot<A> &Op) noexcept { inner.apply(Op); }
+  void apply(const Op &op) noexcept { inner.apply(op); }
 
   auto validate_merge(const version_vector<A> &) const noexcept
       -> std::optional<std::error_condition> {

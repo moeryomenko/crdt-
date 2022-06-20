@@ -16,6 +16,7 @@ namespace crdt {
 
 template <actor_type A> struct version_vector {
   using dots_map = robin_hood::unordered_flat_map<A, std::uint64_t>;
+  using Op = dot<A>;
   dots_map dots;
 
   version_vector() = default;
@@ -50,7 +51,7 @@ template <actor_type A> struct version_vector {
 
   bool operator==(const version_vector<A> &) const noexcept = default;
 
-  void reset_remove(const version_vector<A> &other) {
+  void reset_remove(const version_vector<A> &other) noexcept {
     for (auto [actor, counter] : other.dots) {
       if (auto dot = dots.find(actor);
           dot != dots.end() && counter >= dot->second) {
@@ -76,19 +77,19 @@ template <actor_type A> struct version_vector {
 
   auto inc(const A &a) const noexcept -> dot<A> { return ++get_dot(a); }
 
-  auto validate_op(const dot<A> &Op) const noexcept
+  auto validate_op(const Op &op) const noexcept
       -> std::optional<std::error_condition> {
-    auto next_counter = dots.find(Op.actor)->second + 1;
-    if (Op.counter > next_counter) {
+    auto next_counter = dots.find(op.actor)->second + 1;
+    if (op.counter > next_counter) {
       return std::make_error_condition(std::errc::invalid_argument);
     }
 
     return std::nullopt;
   }
 
-  void apply(const dot<A> &Op) noexcept {
-    if (auto counter = get(Op.actor); counter <= Op.counter) {
-      dots[Op.actor] = Op.counter;
+  void apply(const Op &op) noexcept {
+    if (auto counter = get(op.actor); counter <= op.counter) {
+      dots[op.actor] = op.counter;
     }
   }
 

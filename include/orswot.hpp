@@ -18,20 +18,6 @@
 
 namespace crdt {
 
-namespace ops {
-
-template <actor_type M, actor_type A> struct Add {
-  dot<A> d;
-  std::vector<M> members;
-};
-
-template <actor_type M, actor_type A> struct Rm {
-  version_vector<A> clock;
-  std::vector<M> members;
-};
-
-} // namespace ops
-
 template <actor_type M, actor_type A> struct orswot {
   using vector_clock = version_vector<A>;
   using deferred_set = robin_hood::unordered_flat_set<M>;
@@ -55,23 +41,31 @@ template <actor_type M, actor_type A> struct orswot {
       }
     return true;
   }
+  struct Add {
+    dot<A> d;
+    std::vector<M> members;
+  };
 
-  using Op = std::variant<ops::Add<M, A>, ops::Rm<M, A>>;
+  struct Rm {
+    version_vector<A> clock;
+    std::vector<M> members;
+  };
+
+  using Op = std::variant<Add, Rm>;
 
   auto validate_op(const Op &op) const noexcept
       -> std::optional<std::error_condition> {
-    return std::visit(overloaded{
-                          [this](ops::Add<M, A> add) {
-                            return this->clock.validate_op(add.d);
-                          },
-                          [](ops::Rm<M, A>) { return std::nullopt; },
-                      },
-                      op);
+    return std::visit(
+        overloaded{
+            [this](Add add) { return this->clock.validate_op(add.d); },
+            [](Rm) { return std::nullopt; },
+        },
+        op);
   }
 
   void apply(const Op &op) noexcept {
     std::visit(overloaded{
-                   [this](const ops::Add<M, A> &add) {
+                   [this](const Add &add) {
                      if (clock.get(add.d.actor) >= add.d.counter) {
                        return;
                      }
@@ -85,7 +79,7 @@ template <actor_type M, actor_type A> struct orswot {
                      clock.apply(add.d);
                      this->apply_deferred();
                    },
-                   [this](const ops::Rm<M, A> &rm) {
+                   [this](const Rm &rm) {
                      apply_rm(
                          deferred_set(rm.members.begin(), rm.members.end()),
                          rm.clock);
@@ -121,6 +115,28 @@ template <actor_type M, actor_type A> struct orswot {
         deferred[vclock] = members;
       }
     }
+  }
+
+  void reset_remove(version_vector<A> vclock) {
+	  clock.reset_remove(vclock);
+
+	  for (auto it = entries.begin(); it != entries.end();) {
+		  it->second.reset_remove(vclock);
+		  if (it->second.empty()) {
+			  it = entries.erase(it);
+		  } else {
+			  ++it;
+		  }
+	  }
+
+	  for (auto it = deferred.begin(); it != deferred.end();) {
+		  it->first.reset_remove(vclock);
+		  if (it->first.empty()) {
+			  it = deferred.erase(it);
+		  } else {
+			  ++it;
+		  }
+	  }
   }
 
   void merge(const orswot<M, A> &other) {
@@ -180,7 +196,7 @@ template <actor_type M, actor_type A> struct orswot {
   }
 
   auto add(add_context<A> ctx, M member) noexcept -> Op {
-    return ops::Add<M, A>{std::move(ctx.dot), {member}};
+    return Add{std::move(ctx.dot), {member}};
   }
 
   auto add(const A &actor, const M &member) noexcept -> orswot<M, A> {
@@ -191,7 +207,7 @@ template <actor_type M, actor_type A> struct orswot {
   }
 
   auto rm(remove_context<A> ctx, M member) noexcept -> Op {
-    return ops::Rm<M, A>{ctx.vector, {member}};
+    return Rm{ctx.vector, {member}};
   }
 
   auto rm(const A &_, const M &member) noexcept -> orswot<M, A> {

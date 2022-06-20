@@ -9,6 +9,7 @@
 namespace crdt {
 
 template <value_type T> struct gset {
+  using Op = T;
   robin_hood::unordered_flat_set<T> value;
 
   gset() = default;
@@ -26,12 +27,12 @@ template <value_type T> struct gset {
     value.insert(other.value.begin(), other.value.end());
   }
 
-  auto validate_op(const T &val) const noexcept
+  auto validate_op(const Op &val) const noexcept
       -> std::optional<std::error_condition> {
     return std::nullopt;
   }
 
-  void apply(const T &val) noexcept { insert(val); }
+  void apply(const Op &val) noexcept { insert(val); }
 
   auto insert(const T &val) noexcept -> gset<T> {
     gset<T> res;
