@@ -1,3 +1,5 @@
+[![CMake](https://github.com/moeryomenko/crdtpp/actions/workflows/cmake.yaml/badge.svg)](https://github.com/moeryomenko/crdtpp/actions/workflows/cmake.yaml)
+
 # crdtxx
 
 A family of CRDT's supporting both State and Op based replication.
