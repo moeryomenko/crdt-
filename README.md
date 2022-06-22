@@ -1,4 +1,4 @@
-[![CMake](https://github.com/moeryomenko/crdtpp/actions/workflows/cmake.yaml/badge.svg)](https://github.com/moeryomenko/crdtpp/actions/workflows/cmake.yaml)
+[![GCC](https://github.com/moeryomenko/crdtpp/actions/workflows/cmake.yaml/badge.svg)](https://github.com/moeryomenko/crdtpp/actions/workflows/cmake.yaml)
 
 # crdtxx
 
