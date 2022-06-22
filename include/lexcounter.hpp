@@ -31,7 +31,7 @@ template <actor_type A, arithmetic_value T = std::uint64_t> struct lexcounter {
   };
   lexcounter(lexcounter<A, T> &&) = default;
 
-  auto operator<=>(const lexcounter<A> &) const noexcept = default;
+  auto operator<=>(const lexcounter<A, T> &) const noexcept = default;
 
   auto validate_op(Op op) const noexcept
       -> std::optional<std::error_condition> {
