@@ -27,3 +27,5 @@ crdt_test(NAME "gset_test")
 crdt_test(NAME "orswot_test")
 
 crdt_test(NAME "ormwot_test")
+
+crdt_test(NAME "lexcounter_test")

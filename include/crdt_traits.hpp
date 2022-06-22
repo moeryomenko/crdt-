@@ -19,6 +19,19 @@ template <typename T, typename F = std::hash<T>>
 concept actor_type = value_type<T> && std::copyable<T> && hashable<F, T>;
 
 template <typename T>
+concept arithmetic_value = actor_type<T> && requires(T a, T b) {
+	{ a + b } -> std::convertible_to<T>;
+	{ a - b } -> std::convertible_to<T>;
+	{ a++ } -> std::convertible_to<T>;
+	{ a-- } -> std::convertible_to<T>;
+	{ ++a } -> std::convertible_to<T>;
+	{ --b } -> std::convertible_to<T>;
+	{ a += b } -> std::convertible_to<T>;
+	{ a -= b } -> std::convertible_to<T>;
+	{ a + 1 } -> std::convertible_to<T>;
+};
+
+template <typename T>
 concept cvrdt = requires(T a, T b) {
     { a.validate_merge(b) } -> std::convertible_to<std::optional<std::error_condition>>;
     { a.merge(b) };
