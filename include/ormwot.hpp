@@ -260,7 +260,7 @@ template <value_type K, crdt V> struct ormwot {
 
   auto update(actor_t actor, K key, auto f) noexcept -> ormwot<K, V> {
     ormwot<K, V> delta;
-    delta.apply(delta.update(read_ctx().derive_add_context(actor), key, f));
+    delta.apply(update(read_ctx().derive_add_context(actor), key, f));
     merge(delta);
     return delta;
   }
@@ -273,7 +273,7 @@ template <value_type K, crdt V> struct ormwot {
 
   auto rm(actor_t _, K key) noexcept -> ormwot<K, V> {
     ormwot<K, V> delta;
-    delta.apply(delta.rm(read_ctx().derive_remove_context(), key));
+    delta.apply(rm(read_ctx().derive_remove_context(), key));
     merge(delta);
     return delta;
   }

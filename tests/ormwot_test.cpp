@@ -43,10 +43,10 @@ void showValue(const ormwot<K, V> &v, std::ostream &os) {
     os << "{ " << key << ": { ";
     for (const auto &v : value.val.vals) {
       os << v.val << ": { ";
-	  for (const auto &[actor, counter]: v.vclock.dots) {
-		  os << " { " << actor << ": " << counter << " }, ";
-	  }
-	  os << " }, ";
+      for (const auto &[actor, counter] : v.vclock.dots) {
+        os << " { " << actor << ": " << counter << " }, ";
+      }
+      os << " }, ";
     }
     os << "} } ";
   }
@@ -118,5 +118,34 @@ auto main() -> int {
 
       RC_ASSERT(m == m_snapshot);
     }));
+
+    expect(rc::check("add change delta", [](entries_type e, entry_type entry) {
+      replicated_map replica1;
+      setup_map(1, replica1, e);
+      replicated_map replica2(replica1);
+
+      auto delta = replica1.update(
+          1, entry.first, [val = entry.second](const auto &ctx, auto &v) {
+            return v.write(ctx, val);
+          });
+
+      replica2.merge(delta);
+
+      RC_ASSERT(replica1 == replica2);
+    }));
+
+    expect(
+        rc::check("remove change delta", [](entries_type e, entry_type entry) {
+          replicated_map replica1;
+          setup_map(1, replica1, e);
+          replicated_map replica2(replica1);
+
+          auto delta = replica1.rm(1, entry.first);
+
+          replica2.merge(delta);
+
+          RC_ASSERT(replica1 == replica2);
+          RC_ASSERT(replica1.deferred.size() == replica2.deferred.size());
+        }));
   };
 }
