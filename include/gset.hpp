@@ -2,28 +2,28 @@
 #define GSET_H
 
 #include <initializer_list>
-#include <robin_hood.h>
 
 #include <crdt_traits.hpp>
+#include <unordered_set>
 
 namespace crdt {
 
-template <value_type T> struct gset {
-  using Op = T;
-  robin_hood::unordered_flat_set<T> value;
+template <value_type _Key, set_type<_Key> _Set = std::unordered_set<_Key>> struct gset {
+  using Op = _Key;
+  _Set value;
 
   gset() = default;
-  gset(const gset<T> &) = default;
-  gset(gset<T> &&) = default;
+  gset(const gset<_Key, _Set> &) = default;
+  gset(gset<_Key, _Set> &&) = default;
 
-  auto operator<=>(const gset<T> &) const noexcept = default;
+  auto operator<=>(const gset<_Key, _Set> &) const noexcept = default;
 
-  auto validate_merge(const gset<T> &) const noexcept
+  auto validate_merge(const gset<_Key, _Set> &) const noexcept
       -> std::optional<std::error_condition> {
     return std::nullopt;
   }
 
-  void merge(const gset<T> &other) noexcept {
+  void merge(const gset<_Key, _Set> &other) noexcept {
     value.insert(other.value.begin(), other.value.end());
   }
 
@@ -34,23 +34,23 @@ template <value_type T> struct gset {
 
   void apply(const Op &val) noexcept { insert(val); }
 
-  auto insert(const T &val) noexcept -> gset<T> {
-    gset<T> res;
+  auto insert(const _Key &val) noexcept -> gset<_Key, _Set> {
+    gset<_Key, _Set> res;
     value.insert(val);
     res.value.insert(val);
     return res;
   }
 
-  auto insert(std::initializer_list<T> list) noexcept -> gset<T> {
-    gset<T> res;
+  auto insert(std::initializer_list<_Key> list) noexcept -> gset<_Key, _Set> {
+    gset<_Key, _Set> res;
     value.insert(list);
     res.value.insert(list);
     return res;
   }
 
-  bool contains(const T &val) const noexcept { return value.contains(val); }
+  bool contains(const _Key &val) const noexcept { return value.contains(val); }
 
-  auto read() const noexcept -> robin_hood::unordered_flat_set<T> { return value; }
+  auto read() const noexcept -> _Set { return value; }
 };
 
 } // namespace crdt.

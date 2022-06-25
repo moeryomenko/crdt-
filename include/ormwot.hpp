@@ -9,10 +9,10 @@
 #include <set>
 #include <system_error>
 #include <tuple>
+#include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
-
-#include <robin_hood.h>
 
 #include <context.hpp>
 #include <crdt_traits.hpp>
@@ -21,28 +21,47 @@
 
 namespace crdt {
 
-template <value_type K, crdt V> struct ormwot {
-  using actor_t = typename V::actor_t;
-  using vector_clock = version_vector<actor_t>;
-  using deferred_set = robin_hood::unordered_flat_set<K>;
+namespace details {
 
-  struct Entry {
-    vector_clock clock;
-    V val;
-  };
+namespace map {
+template <actor_type _Actor, crdt _Value> struct Entry {
+  version_vector<_Actor> clock;
+  _Value val;
+};
+
+} // namespace map
+
+} // namespace details
+
+template <
+    value_type _Key, crdt _Value,
+    set_type<_Key> _Key_set = std::unordered_set<_Key>,
+    iterable_assiative_type<
+        _Key, details::map::Entry<typename _Value::actor_t, _Value>>
+        _Entries_map = std::unordered_map<
+            _Key, details::map::Entry<typename _Value::actor_t, _Value>>,
+    iterable_assiative_type<version_vector<typename _Value::actor_t>, _Key_set>
+        _Deferred_map =
+            std::unordered_map<version_vector<typename _Value::actor_t>, _Key_set>>
+struct ormwot {
+  using actor_t = typename _Value::actor_t;
+  using vector_clock = version_vector<actor_t>;
+  using deferred_set = _Key_set;
+  using entry_type = details::map::Entry<actor_t, _Value>;
+  using ormwot_type = ormwot<_Key, _Value, _Key_set, _Entries_map, _Deferred_map>;
 
   vector_clock clock;
-  robin_hood::unordered_flat_map<K, Entry> entries;
-  robin_hood::unordered_flat_map<vector_clock, deferred_set> deferred;
+  _Entries_map entries;
+  _Deferred_map deferred;
 
   ormwot() = default;
-  ormwot(const ormwot<K, V> &) = default;
-  ormwot(ormwot<K, V> &&) = default;
+  ormwot(const ormwot_type &) = default;
+  ormwot(ormwot_type &&) = default;
 
   struct Add {
     dot<actor_t> d;
-    K key;
-    typename V::Op op;
+    _Key key;
+    typename _Value::Op op;
   };
 
   struct Rm {
@@ -50,7 +69,7 @@ template <value_type K, crdt V> struct ormwot {
     deferred_set keyset;
   };
 
-  auto operator==(const ormwot<K, V> &other) const noexcept -> bool {
+  auto operator==(const ormwot_type &other) const noexcept -> bool {
     for (const auto &[key, entry] : entries) {
       if (auto it = other.entries.find(key); it == other.entries.end()) {
         return false;
@@ -142,7 +161,7 @@ template <value_type K, crdt V> struct ormwot {
 
   auto validate_entry_op(const Add add) const noexcept
       -> std::optional<std::error_condition> {
-    Entry entry;
+    entry_type entry;
     if (auto it = entries.find(add.key); it != entries.end()) {
       std::tie(entry.clock, entry.val) = it;
     }
@@ -161,7 +180,8 @@ template <value_type K, crdt V> struct ormwot {
 
               auto it = entries.find(add.key);
               if (it == entries.end()) {
-                std::tie(it, std::ignore) = entries.insert({add.key, Entry{}});
+                std::tie(it, std::ignore) =
+                    entries.insert({add.key, entry_type{}});
               }
 
               it->second.clock.apply(dot(add.d.actor, add.d.counter));
@@ -175,7 +195,7 @@ template <value_type K, crdt V> struct ormwot {
         op);
   }
 
-  void merge(const ormwot<K, V> &other) noexcept {
+  void merge(const ormwot_type &other) noexcept {
     for (auto it = entries.begin(); it != entries.end();) {
       if (!other.entries.contains(it->first)) {
         if (other.clock >= it->second.clock) {
@@ -236,8 +256,9 @@ template <value_type K, crdt V> struct ormwot {
     return read_context(clock, clock, entries.size());
   }
 
-  auto get(K key) const noexcept -> read_context<std::optional<V>, actor_t> {
-    std::optional<V> entry;
+  auto get(_Key key) const noexcept
+      -> read_context<std::optional<_Value>, actor_t> {
+    std::optional<_Value> entry;
     version_vector<actor_t> rm_clock;
 
     if (auto it = entries.find(key); it == entries.end()) {
@@ -250,29 +271,30 @@ template <value_type K, crdt V> struct ormwot {
     return read_context(clock, clock, entry);
   }
 
-  auto update(const add_context<actor_t> &ctx, K key, auto f) const noexcept
+  auto update(const add_context<actor_t> &ctx, _Key key, auto f) const noexcept
       -> Op {
-    V val;
+    _Value val;
     if (auto it = entries.find(key); it != entries.end())
       val = it->second.val;
     return Add{dot(ctx.dot.actor, ctx.dot.counter), key, f(ctx, val)};
   }
 
-  auto update(actor_t actor, K key, auto f) noexcept -> ormwot<K, V> {
-    ormwot<K, V> delta;
+  auto update(actor_t actor, _Key key, auto f) noexcept
+      -> ormwot_type {
+    ormwot_type delta;
     delta.apply(update(read_ctx().derive_add_context(actor), key, f));
     merge(delta);
     return delta;
   }
 
-  auto rm(const remove_context<actor_t> &ctx, K key) const noexcept -> Op {
+  auto rm(const remove_context<actor_t> &ctx, _Key key) const noexcept -> Op {
     deferred_set keyset;
     keyset.insert(key);
     return Rm{clock, keyset};
   }
 
-  auto rm(actor_t _, K key) noexcept -> ormwot<K, V> {
-    ormwot<K, V> delta;
+  auto rm(actor_t _, _Key key) noexcept -> ormwot_type {
+    ormwot_type delta;
     delta.apply(rm(read_ctx().derive_remove_context(), key));
     merge(delta);
     return delta;
@@ -282,15 +304,15 @@ template <value_type K, crdt V> struct ormwot {
     return read_context<void *, actor_t>(clock, clock, nullptr);
   }
 
-  auto keys() const noexcept -> std::set<read_context<K, actor_t>> {
-    std::set<read_context<K, actor_t>> keys;
+  auto keys() const noexcept -> std::set<read_context<_Key, actor_t>> {
+    std::set<read_context<_Key, actor_t>> keys;
     for (auto [key, val] : entries)
       keys.emplace(read_context(clock, val.clock, key));
     return keys;
   }
 
-  auto values() const noexcept -> std::vector<read_context<K, actor_t>> {
-    std::vector<read_context<K, actor_t>> values;
+  auto values() const noexcept -> std::vector<read_context<_Key, actor_t>> {
+    std::vector<read_context<_Key, actor_t>> values;
     for (auto [key, val] : entries)
       values.emplace_back(read_context(clock, val.clock, key));
     return values;

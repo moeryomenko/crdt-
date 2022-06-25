@@ -13,40 +13,6 @@ void setup_set(std::string &&ctx, replicated_set &crdt_set, set s) {
   }
 };
 
-namespace crdt {
-template <actor_type M, actor_type A>
-void showValue(const orswot<M, A> &v, std::ostream &os) {
-  os << "{ ";
-  os << "clock: [ ";
-  for (const auto &[key, value] : v.clock.dots) {
-    os << "{ " << key << ": " << value << " }, ";
-  }
-  os << " ], entries: { ";
-  for (const auto &[key, value] : v.entries) {
-    os << "{ " << key << ": [ ";
-    for (const auto &[k, v] : value.dots) {
-      os << "{ " << k << ": " << v << " }, ";
-    }
-    os << "] } ";
-  }
-
-  os << " }, deferred: { ";
-  for (const auto &[clock, dset] : v.deferred) {
-    os << "[ [ ";
-    for (const auto &[actor, value] : clock.dots) {
-      os << "{ " << actor << ": " << value << " }, ";
-    }
-    os << " ]: [ ";
-    for (const auto &k : dset) {
-      os << k << ", ";
-    }
-    os << "], ";
-  }
-
-  os << "} }";
-}
-} // namespace crdt
-
 auto main() -> int {
   using namespace boost::ut;
   using namespace crdt;
@@ -149,10 +115,9 @@ auto main() -> int {
 
     // If we want to remove this entry, the remove context
     // should descend from vclock { 1->1, 2->1 }
-    expect(c_elem_ctx.remove_vector ==
-           version_vector<std::string>(
-               robin_hood::unordered_map<std::string, std::uint64_t>(
-                   {{"A", 1}, {"B", 1}})));
+    expect(
+        c_elem_ctx.remove_vector.dots ==
+        std::unordered_map<std::string, std::uint64_t>({{"A", 1}, {"B", 1}}));
 
     a.apply(a.add(a.read().derive_add_context("C"), 1));
     b.apply(c.rm(c_elem_ctx.derive_remove_context(), 1));

@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <iterator>
 #include <numeric>
-#include <robin_hood.h>
+#include <unordered_map>
 #include <utility>
 
 #include <crdt_traits.hpp>
@@ -14,24 +14,28 @@
 
 namespace crdt {
 
-template <actor_type A> struct version_vector {
-  using dots_map = robin_hood::unordered_flat_map<A, std::uint64_t>;
-  using Op = dot<A>;
+template <actor_type _Actor,
+          iterable_assiative_type<_Actor, std::uint64_t> _Map>
+struct version_vector {
+  using actor_t = _Actor;
+  using dots_map = _Map;
+  using Op = dot<_Actor>;
   dots_map dots;
 
   version_vector() = default;
-  version_vector(const version_vector<A> &) = default;
-  version_vector(version_vector<A> &&) = default;
-  version_vector(robin_hood::unordered_map<A, uint64_t> &&v) noexcept
-      : dots(v) {}
+  version_vector(const version_vector<_Actor, _Map> &) = default;
+  version_vector(version_vector<_Actor, _Map> &&) = default;
 
-  version_vector<A> &operator=(const version_vector<A> &) = default;
-  version_vector<A> &operator=(version_vector<A> &&) = default;
-  version_vector<A> &operator=(version_vector<A> &) = default;
+  version_vector<_Actor, _Map> &
+  operator=(const version_vector<_Actor, _Map> &) = default;
+  version_vector<_Actor, _Map> &
+  operator=(version_vector<_Actor, _Map> &&) = default;
+  version_vector<_Actor, _Map> &
+  operator=(version_vector<_Actor, _Map> &) = default;
 
-  auto operator<=>(const version_vector<A> &other) const noexcept {
-    auto all_gt = [](const version_vector<A> &left,
-                     const version_vector<A> &right) -> bool {
+  auto operator<=>(const version_vector<_Actor, _Map> &other) const noexcept {
+    auto all_gt = [](const version_vector<_Actor, _Map> &left,
+                     const version_vector<_Actor, _Map> &right) -> bool {
       return std::all_of(
           right.dots.begin(), right.dots.end(),
           [&left](const auto &d) { return left.get(d.first) >= d.second; });
@@ -49,9 +53,10 @@ template <actor_type A> struct version_vector {
     return std::partial_ordering::unordered;
   }
 
-  bool operator==(const version_vector<A> &) const noexcept = default;
+  bool
+  operator==(const version_vector<_Actor, _Map> &) const noexcept = default;
 
-  void reset_remove(const version_vector<A> &other) noexcept {
+  void reset_remove(const version_vector<_Actor, _Map> &other) noexcept {
     for (auto [actor, counter] : other.dots) {
       if (auto dot = dots.find(actor);
           dot != dots.end() && counter >= dot->second) {
@@ -62,20 +67,22 @@ template <actor_type A> struct version_vector {
 
   bool empty() const noexcept { return dots.empty(); }
 
-  auto get(const A &a) const noexcept -> std::uint64_t {
+  auto get(const _Actor &a) const noexcept -> std::uint64_t {
     auto it = dots.find(a);
     if (it == dots.end())
       return 0;
     return it->second;
   }
 
-  auto get_dot(const A &a) const noexcept -> dot<A> {
+  auto get_dot(const _Actor &a) const noexcept -> dot<_Actor> {
     if (auto it = dots.find(a); it != dots.end())
       return dot(it->first, it->second);
     return dot(a, 0);
   }
 
-  auto inc(const A &a) const noexcept -> dot<A> { return ++get_dot(a); }
+  auto inc(const _Actor &a) const noexcept -> dot<_Actor> {
+    return ++get_dot(a);
+  }
 
   auto validate_op(const Op &op) const noexcept
       -> std::optional<std::error_condition> {
@@ -93,43 +100,44 @@ template <actor_type A> struct version_vector {
     }
   }
 
-  auto validate_merge(const version_vector<A> &T) const noexcept
+  auto validate_merge(const version_vector<_Actor, _Map> &) const noexcept
       -> std::optional<std::error_condition> {
     return std::nullopt;
   }
 
-  void merge(const version_vector<A> &other) noexcept {
+  void merge(const version_vector<_Actor, _Map> &other) noexcept {
     for (const auto &[actor, counter] : other.dots)
       apply(dot{actor, counter});
   }
 
-  auto clone_without(version_vector<A> base_clock) const noexcept
-      -> version_vector<A> {
-    version_vector<A> cloned(*this);
+  auto clone_without(version_vector<_Actor, _Map> base_clock) const noexcept
+      -> version_vector<_Actor, _Map> {
+    version_vector<_Actor, _Map> cloned(*this);
     cloned.reset_remove(base_clock);
     return cloned;
   }
 };
 
-template <actor_type A>
-auto intersection(const version_vector<A> &left,
-                  const version_vector<A> &right) noexcept
-    -> version_vector<A> {
-  robin_hood::unordered_map<A, std::uint64_t> dots;
+template <actor_type A, iterable_assiative_type<A, std::uint64_t> T>
+auto intersection(const version_vector<A, T> &left,
+                  const version_vector<A, T> &right) noexcept
+    -> version_vector<A, T> {
+  version_vector<A, T> res;
   std::set_intersection(left.dots.begin(), left.dots.end(), right.dots.begin(),
-                        right.dots.end(), std::inserter(dots, dots.begin()));
-  return version_vector(std::move(dots));
+                        right.dots.end(), std::inserter(res.dots, res.dots.begin()));
+  return res;
 }
 
 } // namespace crdt.
 
-namespace robin_hood {
+namespace std {
 
 using namespace crdt;
 
-template <actor_type A> struct hash<version_vector<A>> {
-  size_t operator()(const version_vector<A> &k) const {
-    robin_hood::hash<A> elem_hash;
+template <actor_type A, iterable_assiative_type<A, std::uint64_t> T>
+struct hash<version_vector<A, T>> {
+  size_t operator()(const version_vector<A, T> &k) const {
+    std::hash<A> elem_hash;
     return std::accumulate(k.dots.begin(), k.dots.end(), 0,
                            [&elem_hash](size_t acc, const auto &elem) {
                              return acc ^ elem_hash(elem.first);
@@ -137,6 +145,6 @@ template <actor_type A> struct hash<version_vector<A>> {
   }
 };
 
-} // namespace robin_hood
+} // namespace std
 
 #endif // VERSION_VECTOR_H

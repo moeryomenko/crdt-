@@ -11,6 +11,24 @@
 
 using namespace crdt;
 
+namespace crdt {
+
+template <actor_type K, value_type V>
+void showValue(const mvreg<K, V> &v, std::ostream &os) {
+  os << "{ ";
+  os << "entries: { ";
+  for (const auto &v : v.vals) {
+    os << v.val << ": { ";
+    for (const auto &[actor, counter] : v.vclock.dots) {
+      os << " { " << actor << ": " << counter << " }, ";
+    }
+    os << " }, ";
+  }
+
+  os << "} }";
+}
+} // namespace crdt
+
 auto main() -> int {
   using namespace boost::ut;
 
@@ -56,53 +74,57 @@ auto main() -> int {
            std::vector<std::string>{"bob", "alice"});
   };
 
-  assert(rc::check("associative", [](reg r1, reg r2, reg r3) {
-    auto reg1 = build_from_reg(std::move(r1));
-    auto reg2 = build_from_reg(std::move(r2));
-    auto reg3 = build_from_reg(std::move(r3));
+  "property based tests"_test = [] {
+    using rc::check;
 
-    auto reg1_snapshot = reg1;
+    expect(rc::check("associative", [](reg r1, reg r2, reg r3) {
+      auto reg1 = build_from_reg(std::move(r1));
+      auto reg2 = build_from_reg(std::move(r2));
+      auto reg3 = build_from_reg(std::move(r3));
 
-    reg1.merge(reg2);
-    reg1.merge(reg3);
+      auto reg1_snapshot = reg1;
 
-    reg2.merge(reg3);
-    reg1_snapshot.merge(reg2);
+      reg1.merge(reg2);
+      reg1.merge(reg3);
 
-    RC_ASSERT(reg1 == reg1_snapshot);
-  }));
+      reg2.merge(reg3);
+      reg1_snapshot.merge(reg2);
 
-  assert(rc::check("commutative", [](reg r1, reg r2) {
-    auto reg1 = build_from_reg(std::move(r1));
-    auto reg2 = build_from_reg(std::move(r2));
+      RC_ASSERT(reg1 == reg1_snapshot);
+    }));
 
-    auto reg1_snapshot = reg1;
+    expect(rc::check("commutative", [](reg r1, reg r2) {
+      auto reg1 = build_from_reg(std::move(r1));
+      auto reg2 = build_from_reg(std::move(r2));
 
-    reg1.merge(reg2);
+      auto reg1_snapshot = reg1;
 
-    reg2.merge(reg1_snapshot);
+      reg1.merge(reg2);
 
-    RC_ASSERT(reg1 == reg2);
-  }));
+      reg2.merge(reg1_snapshot);
 
-  assert(rc::check("idempotent", [](reg r) {
-    auto reg = build_from_reg(std::move(r));
-    auto reg_snapshot = build_from_reg(std::move(r));
+      RC_ASSERT(reg1 == reg2);
+    }));
 
-    reg.merge(reg_snapshot);
+    expect(rc::check("idempotent", [](reg r) {
+      auto reg = build_from_reg(std::move(r));
+      auto reg_snapshot = build_from_reg(std::move(r));
 
-    RC_ASSERT(reg == reg_snapshot);
-  }));
+      reg.merge(reg_snapshot);
 
-  assert(rc::check("change delta", [](reg r, int value) {
-    auto [m, actor] = r;
-    auto replica1 = build_from_reg(std::move(r));
-    auto replica2 = replica1;
+      RC_ASSERT(reg == reg_snapshot);
+    }));
 
-    auto delta = replica1.write(actor, value);
+    expect(rc::check("change delta", [](reg r, int value) {
+      auto [m, actor] = r;
+      auto replica1 = build_from_reg(std::move(r));
+      auto replica2 = replica1;
 
-    replica2.merge(delta);
+      auto delta = replica1.write(actor, value);
 
-    RC_ASSERT(replica1 == replica2);
-  }));
+      replica2.merge(delta);
+
+      RC_ASSERT(replica1 == replica2);
+    }));
+  };
 }
