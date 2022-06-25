@@ -6,10 +6,9 @@
 #include <iterator>
 #include <optional>
 #include <unordered_map>
+#include <unordered_set>
 #include <variant>
 #include <vector>
-
-#include <robin_hood.h>
 
 #include <context.hpp>
 #include <crdt_traits.hpp>
@@ -18,19 +17,27 @@
 
 namespace crdt {
 
-template <actor_type M, actor_type A> struct orswot {
-  using vector_clock = version_vector<A>;
-  using deferred_set = robin_hood::unordered_flat_set<M>;
+template <actor_type _Key, actor_type _Actor,
+          iterable_assiative_type<_Key, version_vector<_Actor>> _Entries_map =
+              std::unordered_map<_Key, version_vector<_Actor>>,
+          set_type<_Key> _Deferred_set_type = std::unordered_set<_Key>,
+          iterable_assiative_type<version_vector<_Actor>, _Deferred_set_type>
+              _Deferred_map =
+                  std::unordered_map<version_vector<_Actor>, _Deferred_set_type>>
+struct orswot {
+  using vector_clock = version_vector<_Actor>;
+  using deferred_set = _Deferred_set_type;
+  using orswot_type = orswot<_Key, _Actor, _Entries_map, _Deferred_set_type, _Deferred_map>;
 
   vector_clock clock;
-  robin_hood::unordered_flat_map<M, vector_clock> entries;
-  robin_hood::unordered_flat_map<vector_clock, deferred_set> deferred;
+  _Entries_map entries;
+  _Deferred_map deferred;
 
   orswot() = default;
-  orswot(const orswot<M, A> &) = default;
-  orswot(orswot<M, A> &&) = default;
+  orswot(const orswot_type &) = default;
+  orswot(orswot_type &&) = default;
 
-  auto operator==(const orswot<M, A> &other) const noexcept -> bool {
+  auto operator==(const orswot_type &other) const noexcept -> bool {
     for (const auto &e : other.entries)
       if (!entries.contains(e.first)) {
         return false;
@@ -42,13 +49,13 @@ template <actor_type M, actor_type A> struct orswot {
     return true;
   }
   struct Add {
-    dot<A> d;
-    std::vector<M> members;
+    dot<_Actor> d;
+    std::vector<_Key> members;
   };
 
   struct Rm {
-    version_vector<A> clock;
-    std::vector<M> members;
+    version_vector<_Actor> clock;
+    std::vector<_Key> members;
   };
 
   using Op = std::variant<Add, Rm>;
@@ -117,29 +124,29 @@ template <actor_type M, actor_type A> struct orswot {
     }
   }
 
-  void reset_remove(version_vector<A> vclock) {
-	  clock.reset_remove(vclock);
+  void reset_remove(version_vector<_Actor> vclock) {
+    clock.reset_remove(vclock);
 
-	  for (auto it = entries.begin(); it != entries.end();) {
-		  it->second.reset_remove(vclock);
-		  if (it->second.empty()) {
-			  it = entries.erase(it);
-		  } else {
-			  ++it;
-		  }
-	  }
+    for (auto it = entries.begin(); it != entries.end();) {
+      it->second.reset_remove(vclock);
+      if (it->second.empty()) {
+        it = entries.erase(it);
+      } else {
+        ++it;
+      }
+    }
 
-	  for (auto it = deferred.begin(); it != deferred.end();) {
-		  it->first.reset_remove(vclock);
-		  if (it->first.empty()) {
-			  it = deferred.erase(it);
-		  } else {
-			  ++it;
-		  }
-	  }
+    for (auto it = deferred.begin(); it != deferred.end();) {
+      it->first.reset_remove(vclock);
+      if (it->first.empty()) {
+        it = deferred.erase(it);
+      } else {
+        ++it;
+      }
+    }
   }
 
-  void merge(const orswot<M, A> &other) {
+  void merge(const orswot_type &other) {
     for (auto it = entries.begin(); it != entries.end();) {
       if (!other.entries.contains(it->first)) {
         if (other.clock >= it->second) {
@@ -179,11 +186,11 @@ template <actor_type M, actor_type A> struct orswot {
     apply_deferred();
   }
 
-  auto contains(const M &member) noexcept -> read_context<bool, A> {
+  auto contains(const _Key &member) noexcept -> read_context<bool, _Actor> {
     return read_context(clock, entries[member], entries.contains(member));
   }
 
-  auto read() const noexcept -> read_context<deferred_set, A> {
+  auto read() const noexcept -> read_context<deferred_set, _Actor> {
     deferred_set val;
     std::transform(entries.begin(), entries.end(),
                    std::inserter(val, val.begin()),
@@ -191,27 +198,29 @@ template <actor_type M, actor_type A> struct orswot {
     return read_context(clock, clock, val);
   }
 
-  auto read_ctx() const noexcept -> read_context<deferred_set, A> {
+  auto read_ctx() const noexcept -> read_context<deferred_set, _Actor> {
     return read_context(clock, clock, deferred_set());
   }
 
-  auto add(add_context<A> ctx, M member) noexcept -> Op {
+  auto add(add_context<_Actor> ctx, _Key member) noexcept -> Op {
     return Add{std::move(ctx.dot), {member}};
   }
 
-  auto add(const A &actor, const M &member) noexcept -> orswot<M, A> {
-    orswot<M, A> delta;
+  auto add(const _Actor &actor, const _Key &member) noexcept
+      -> orswot_type {
+    orswot_type delta;
     delta.apply(delta.add(read_ctx().derive_add_context(actor), member));
     merge(delta);
     return delta;
   }
 
-  auto rm(remove_context<A> ctx, M member) noexcept -> Op {
+  auto rm(remove_context<_Actor> ctx, _Key member) noexcept -> Op {
     return Rm{ctx.vector, {member}};
   }
 
-  auto rm(const A &_, const M &member) noexcept -> orswot<M, A> {
-    orswot<M, A> delta;
+  auto rm(const _Actor &_, const _Key &member) noexcept
+      -> orswot_type {
+    orswot_type delta;
     delta.apply(delta.rm(read_ctx().derive_remove_context(), member));
     merge(delta);
     return delta;

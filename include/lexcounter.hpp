@@ -7,8 +7,6 @@
 #include <unordered_map>
 #include <utility>
 
-#include <robin_hood.h>
-
 #include <crdt_traits.hpp>
 
 namespace crdt {

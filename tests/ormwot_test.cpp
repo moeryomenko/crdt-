@@ -3,6 +3,7 @@
 #include <functional>
 #include <iostream>
 #include <map>
+#include <unordered_map>
 #include <vector>
 
 #include <boost/ut.hpp>
@@ -89,7 +90,7 @@ auto main() -> int {
                    m1.merge(m3);
 
                    m2.merge(m3);
-                   m1_snapshot.merge(m1);
+                   m1_snapshot.merge(m2);
 
                    RC_ASSERT(m1 == m1_snapshot);
                  }));

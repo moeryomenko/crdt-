@@ -65,7 +65,7 @@ template <actor_type A, value_type T> struct mvreg {
     std::erase_if(other.vals, [vals = vals](const auto &val) {
       return std::any_of(vals.begin(), vals.end(),
                          [clock = val.vclock](const auto &val) {
-                           return val.vclock > clock;
+                           return val.vclock >= clock;
                          });
     });
     vals.insert(vals.end(), other.vals.begin(), other.vals.end());

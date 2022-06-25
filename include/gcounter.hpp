@@ -15,10 +15,8 @@ namespace crdt {
 template <actor_type A> struct gcounter {
   using Op = dot<A>;
 
-  version_vector<A> inner;
-
   gcounter() = default;
-  gcounter(version_vector<A> &&v) noexcept : inner(std::move(v)) {}
+  gcounter(version_vector<A> &&v) noexcept : clock(std::move(v)) {}
   gcounter(const gcounter &) = default;
   gcounter(gcounter &&) = default;
 
@@ -31,17 +29,17 @@ template <actor_type A> struct gcounter {
     return std::nullopt;
   }
 
-  void apply(const Op &op) noexcept { inner.apply(op); }
+  void apply(const Op &op) noexcept { clock.apply(op); }
 
   auto validate_merge(const version_vector<A> &) const noexcept
       -> std::optional<std::error_condition> {
     return std::nullopt;
   }
 
-  void merge(const gcounter<A> &other) noexcept { inner.merge(other.inner); }
+  void merge(const gcounter<A> &other) noexcept { clock.merge(other.clock); }
 
   void reset_remove(const version_vector<A> &v) noexcept {
-    inner.reset_remove(v);
+    clock.reset_remove(v);
   }
 
   auto inc(const A &a, std::uint32_t steps = 1) noexcept -> gcounter<A> {
@@ -60,15 +58,17 @@ template <actor_type A> struct gcounter {
 
   auto operator+(std::pair<A, std::uint32_t> &&a) const noexcept -> dot<A> {
     auto steps = a.second;
-    steps += inner.get(a.first);
+    steps += clock.get(a.first);
     return dot(a.first, steps);
   }
 
   auto read() const noexcept -> std::uint32_t {
     return std::accumulate(
-        inner.dots.begin(), inner.dots.end(), 0,
+        clock.dots.begin(), clock.dots.end(), 0,
         [](std::uint32_t sum, const auto &n) { return sum + n.second; });
   }
+private:
+  version_vector<A> clock;
 };
 
 } // namespace crdt.
